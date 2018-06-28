@@ -1,4 +1,4 @@
-package api_test
+package rundeck_test
 
 import (
 	"testing"

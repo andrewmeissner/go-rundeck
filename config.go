@@ -1,4 +1,4 @@
-package api
+package rundeck
 
 // Config is the basic configuration needed by the client to communicate with Rundeck
 type Config struct {

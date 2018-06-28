@@ -1,4 +1,4 @@
-package api
+package rundeck
 
 import (
 	"encoding/json"
