@@ -16,7 +16,7 @@ type Client struct {
 // NewClient returns a rundeck client
 //
 // If config is nil, then the configuration from DefaultConfig() will be used.
-// DefaultConfig() assumes that the environment variable RDECK_TOKEN is set, and
+// DefaultConfig() assumes that the environment variable RUNDECK_TOKEN is set, and
 // that its value is a valid Rundeck API token.
 func NewClient(config *Config) *Client {
 	if config == nil {

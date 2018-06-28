@@ -7,7 +7,12 @@ const (
 	DefaultAPIVersion23 = 23
 
 	// EnvRundeckToken sets the name of the environment variable to read
-	EnvRundeckToken = "RDECK_TOKEN"
+	EnvRundeckToken = "RUNDECK_TOKEN"
+
+	// EnvRundeckServerURL is the name of the environment variable for the server url
+	EnvRundeckServerURL = "RUNDECK_SERVER_URL"
+
+	localRundeckURL = "http://127.0.0.1:4440"
 )
 
 // Config is the basic configuration needed by the client to communicate with Rundeck
@@ -23,11 +28,19 @@ type Config struct {
 }
 
 // DefaultConfig implements a localhost basic configuration, relying on and assuming a valid api token
-// set in the environment variable RDECK_TOKEN
+// set in the environment variable RUNDECK_TOKEN.
+//
+// The environment variable RUNDECK_SERVER_URL will be used if it is present,
+// otherwise http://127.0.0.1:4440 will be used as the server url.
 func DefaultConfig() *Config {
+	serverURL := os.Getenv(EnvRundeckServerURL)
+	if serverURL == "" {
+		serverURL = localRundeckURL
+	}
+
 	return &Config{
 		APIVersion:       DefaultAPIVersion23,
 		RundeckAuthToken: os.Getenv(EnvRundeckToken),
-		ServerURL:        "http://127.0.0.1:4440",
+		ServerURL:        serverURL,
 	}
 }
