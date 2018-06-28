@@ -20,6 +20,4 @@ func TestNewClient(t *testing.T) {
 	if client.RundeckAddr != "http://localhost:4440/api/21" {
 		t.Errorf("client's RundeckAddr was malformed")
 	}
-
-	// Test vscode commit and push
 }
