@@ -13,7 +13,7 @@ type Error struct {
 	Message      string `json:"message"`
 }
 
-// String marshals the struct into a json string
+// Error marshals the struct into a json string
 func (e Error) Error() string {
 	bs, err := json.Marshal(e)
 	if err != nil {
