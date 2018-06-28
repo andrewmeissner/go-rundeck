@@ -3,11 +3,11 @@ package api_test
 import (
 	"testing"
 
-	"github.com/andrewmeissner/go-rundeck/api"
+	rundeck "github.com/andrewmeissner/go-rundeck"
 )
 
 func TestNewClient(t *testing.T) {
-	client := api.NewClient(&api.Config{
+	client := rundeck.NewClient(&rundeck.Config{
 		APIVersion:       21,
 		RundeckAuthToken: "test-token",
 		ServerURL:        "http://localhost:4440/",
