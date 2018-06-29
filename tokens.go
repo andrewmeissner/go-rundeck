@@ -82,3 +82,31 @@ func (t *Tokens) User(user string) ([]*Token, error) {
 
 	return tokenList, nil
 }
+
+// Get returns the token by the supplied id
+func (t *Tokens) Get(id string) (*Token, error) {
+	url := fmt.Sprintf("%s/token/%s", t.c.RundeckAddr, id)
+
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := t.c.client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		return nil, makeError(res.Body)
+	}
+
+	var token Token
+	err = json.NewDecoder(res.Body).Decode(&token)
+	if err != nil {
+		return nil, err
+	}
+
+	return &token, nil
+}
