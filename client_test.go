@@ -2,18 +2,10 @@ package rundeck_test
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
 	rundeck "github.com/andrewmeissner/go-rundeck"
 )
-
-func TestMain(m *testing.M) {
-	os.Setenv("RUNDECK_SERVER_URL", "http://localhost:4440//")
-	os.Setenv("RUNDECK_TOKEN", "env-test-token")
-
-	os.Exit(m.Run())
-}
 
 func TestNewClient(t *testing.T) {
 	client := rundeck.NewClient(&rundeck.Config{
@@ -30,25 +22,13 @@ func TestNewClient(t *testing.T) {
 		t.Errorf("client's RundeckAddr was malformed")
 	}
 
-	defaultClient := rundeck.NewClient(rundeck.DefaultConfig())
+	defaultClient := rundeck.NewClient(nil)
 
 	if defaultClient == nil {
 		t.Errorf("default client was not supposed to be nil")
 	}
 
-	if defaultClient.RundeckAddr != fmt.Sprintf("http://localhost:4440/api/%d", rundeck.DefaultAPIVersion23) {
-		t.Errorf("default config's rundeck addr is malformed")
-	}
-
-	os.Clearenv()
-
-	superDefaultClient := rundeck.NewClient(nil)
-
-	if superDefaultClient == nil {
-		t.Errorf("super default client was not supposed to be nil")
-	}
-
-	if superDefaultClient.RundeckAddr != fmt.Sprintf("http://127.0.0.1:4440/api/%d", rundeck.DefaultAPIVersion23) {
-		t.Errorf("super default client's rundeck addr is malformed")
+	if defaultClient.RundeckAddr != fmt.Sprintf("http://localhost:4440/api/%d", rundeck.DefaultAPIVersion24) {
+		t.Errorf("default client's rundeck addr is malformed: got %s", defaultClient.RundeckAddr)
 	}
 }
