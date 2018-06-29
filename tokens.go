@@ -147,7 +147,9 @@ func (t *Tokens) Create(user string, roles []string, duration *time.Duration) (*
 	}
 	defer res.Body.Close()
 
-	fmt.Println("STATUS CODE:", res.StatusCode)
+	if res.StatusCode != http.StatusCreated {
+		return nil, makeError(res.Body)
+	}
 
 	var token Token
 	err = json.NewDecoder(res.Body).Decode(&token)
@@ -156,4 +158,26 @@ func (t *Tokens) Create(user string, roles []string, duration *time.Duration) (*
 	}
 
 	return &token, nil
+}
+
+// Delete deletes a token
+func (t *Tokens) Delete(id string) error {
+	url := fmt.Sprintf("%s/token/%s", t.c.RundeckAddr, id)
+
+	req, err := http.NewRequest(http.MethodDelete, url, nil)
+	if err != nil {
+		return err
+	}
+
+	res, err := t.c.client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusNoContent {
+		return makeError(res.Body)
+	}
+
+	return nil
 }
