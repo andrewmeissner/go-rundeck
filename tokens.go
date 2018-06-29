@@ -115,11 +115,10 @@ func (t *Tokens) Get(id string) (*Token, error) {
 // Create creates a token based on the supplied config.
 //
 // If duration is nil, Rundeck will use the configured default.
-// NOTE: the duration needs to be a go parse-able duration.  The
-// example given of "120d" in Rundeck's documentation will not work
-// when go attempts to parse that.  Please review https://godoc.org/time#ParseDuration
-// for valid time units, and convert accordingly.
-func (t *Tokens) Create(user string, roles []string, duration *time.Duration) (*Token, error) {
+// NOTE: the duration needs to be something that rundeck can understand.
+// Unfortunately, this isn't a go parseable duration.  "120d" is understood by Rundeck
+// while "2880h0m0s" is not (what time.Duration.String() returns for the equivalence).
+func (t *Tokens) Create(user string, roles []string, duration *string) (*Token, error) {
 	url := fmt.Sprintf("%s/tokens", t.c.RundeckAddr)
 
 	payload := map[string]interface{}{
@@ -128,7 +127,7 @@ func (t *Tokens) Create(user string, roles []string, duration *time.Duration) (*
 	}
 
 	if duration != nil {
-		payload["duration"] = duration.String()
+		payload["duration"] = stringValue(duration)
 	}
 
 	bs, err := json.Marshal(payload)

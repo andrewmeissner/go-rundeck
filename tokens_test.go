@@ -2,7 +2,6 @@ package rundeck_test
 
 import (
 	"testing"
-	"time"
 
 	rundeck "github.com/andrewmeissner/go-rundeck"
 )
@@ -55,7 +54,7 @@ func TestGetToken(t *testing.T) {
 func TestCreateAndDeleteToken(t *testing.T) {
 	client := rundeck.NewClient(rundeck.DefaultConfig())
 
-	duration := time.Duration(5) * time.Second
+	duration := "5s"
 	token, err := client.Tokens().Create("test", []string{"admin"}, &duration)
 	if err != nil {
 		t.Error(err)
@@ -81,5 +80,22 @@ func TestCreateAndDeleteToken(t *testing.T) {
 	err = client.Tokens().Delete(token.ID)
 	if err != nil {
 		t.Error(err)
+	}
+}
+
+func TestLargeDurationOnCreateToken(t *testing.T) {
+	client := rundeck.NewClient(rundeck.DefaultConfig())
+	duration := "30d"
+
+	token, err := client.Tokens().Create("admin", []string{"admin"}, &duration)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if token != nil {
+		err = client.Tokens().Delete(token.ID)
+		if err != nil {
+			t.Error(err)
+		}
 	}
 }
