@@ -6,3 +6,7 @@ func stringValue(v *string) string {
 	}
 	return ""
 }
+
+func stringReference(v string) *string {
+	return &v
+}
