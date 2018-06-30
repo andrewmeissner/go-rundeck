@@ -16,4 +16,8 @@ func TestSystemInfo(t *testing.T) {
 	if systemInfo == nil {
 		t.Errorf("system info wasn't supposed to be nil")
 	}
+
+	if systemInfo.System.Metrics.HREF == "" {
+		t.Errorf("unexported struct attributes failed (not really a test)")
+	}
 }
