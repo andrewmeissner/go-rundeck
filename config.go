@@ -3,8 +3,8 @@ package rundeck
 import "os"
 
 const (
-	// DefaultAPIVersion24 is defaulted to api version 23
-	DefaultAPIVersion24 = 24
+	// APIVersion24 is defaulted to the specified api version
+	APIVersion24 = 24
 
 	// EnvRundeckToken sets the name of the environment variable to read
 	EnvRundeckToken = "RUNDECK_TOKEN"
@@ -39,7 +39,7 @@ func DefaultConfig() *Config {
 	}
 
 	return &Config{
-		APIVersion:       DefaultAPIVersion24,
+		APIVersion:       APIVersion24,
 		RundeckAuthToken: os.Getenv(EnvRundeckToken),
 		ServerURL:        serverURL,
 	}

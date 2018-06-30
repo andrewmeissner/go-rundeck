@@ -28,7 +28,7 @@ func TestNewClient(t *testing.T) {
 		t.Errorf("default client was not supposed to be nil")
 	}
 
-	if defaultClient.RundeckAddr != fmt.Sprintf("http://localhost:4440/api/%d", rundeck.DefaultAPIVersion24) {
+	if defaultClient.RundeckAddr != fmt.Sprintf("http://localhost:4440/api/%d", rundeck.APIVersion24) {
 		t.Errorf("default client's rundeck addr is malformed: got %s", defaultClient.RundeckAddr)
 	}
 }
