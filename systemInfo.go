@@ -48,7 +48,7 @@ type ExecutionMode struct {
 
 // OperatingSystem is information regarding the Rundeck host
 type OperatingSystem struct {
-	Architecture string `json:"arch:`
+	Architecture string `json:"arch"`
 	Name         string `json:"name"`
 	Version      string `json:"version"`
 }
@@ -88,7 +88,7 @@ type MemoryStats struct {
 	Unit  string `json:"unit"`
 	Max   int64  `json:"max"`
 	Free  int64  `json:"free"`
-	Total int64  `json:"total'`
+	Total int64  `json:"total"`
 }
 
 // SchedulerStats are stats about the Rundeck scheduler
