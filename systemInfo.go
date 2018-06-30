@@ -14,14 +14,15 @@ type SystemInfo struct {
 
 // System is information about the rundeck system
 type System struct {
-	Timestamp  Timestamp       `json:"timestamp"`
-	Rundeck    Rundeck         `json:"rundeck"`
-	Executions ExecutionMode   `json:"executions"`
-	OS         OperatingSystem `json:"os"`
-	JVM        JVM             `json:"jvm"`
-	Stats      Stats           `json:"stats"`
-	Metrics    Metrics         `json:"metrics"`
-	ThreadDump ThreadDump      `json:"threadDump"`
+	Timestamp   Timestamp       `json:"timestamp"`
+	Rundeck     Rundeck         `json:"rundeck"`
+	Executions  ExecutionMode   `json:"executions"`
+	OS          OperatingSystem `json:"os"`
+	JVM         JVM             `json:"jvm"`
+	Stats       Stats           `json:"stats"`
+	Metrics     Metrics         `json:"metrics"`
+	ThreadDump  ThreadDump      `json:"threadDump"`
+	HealthCheck HealthCheck     `json:"healthcheck"`
 }
 
 // Timestamp is time information on the Rundeck server
@@ -115,6 +116,11 @@ type Metrics struct {
 
 // ThreadDump contains a url to a page regarding thread dump information
 type ThreadDump struct {
+	urlInfo
+}
+
+// HealthCheck contains a urll to a page regarding health information
+type HealthCheck struct {
 	urlInfo
 }
 
