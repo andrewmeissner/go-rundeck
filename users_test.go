@@ -67,3 +67,11 @@ func TestModifyUser(t *testing.T) {
 		t.Errorf("first names were the same when they should have been different")
 	}
 }
+
+func TestModifyNilUser(t *testing.T) {
+	client := rundeck.NewClient(rundeck.DefaultConfig())
+	_, err := client.Users().Modify(nil, nil)
+	if err == nil {
+		t.Errorf("an error should have been returned since input was nil")
+	}
+}

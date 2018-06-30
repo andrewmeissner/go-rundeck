@@ -90,15 +90,15 @@ func (u *Users) Get(login *string) (*UserProfile, error) {
 //
 // If the user parameter is nil, then the user associated with
 // the auth token will be modified.
-func (u *Users) Modify(user *string, input *ModifyUserInput) (*UserProfile, error) {
+func (u *Users) Modify(login *string, input *ModifyUserInput) (*UserProfile, error) {
 	if input == nil {
 		return nil, fmt.Errorf("the parameter ModifyUserInput cannot be nil")
 	}
 
 	url := fmt.Sprintf("%s/user/info", u.c.RundeckAddr)
 
-	if user != nil {
-		url += "/" + stringValue(user)
+	if login != nil {
+		url += "/" + stringValue(login)
 	}
 
 	var body io.Reader
