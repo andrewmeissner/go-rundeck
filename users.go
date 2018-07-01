@@ -100,12 +100,7 @@ func (u *Users) Modify(login *string, input *ModifyUserInput) (*UserProfile, err
 		body = bytes.NewReader(bs)
 	}
 
-	req, err := http.NewRequest(http.MethodPost, url, body)
-	if err != nil {
-		return nil, err
-	}
-
-	res, err := u.c.client.Do(req)
+	res, err := u.c.post(url, body)
 	if err != nil {
 		return nil, err
 	}

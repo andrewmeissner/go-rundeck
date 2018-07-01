@@ -105,12 +105,7 @@ func (t *Tokens) Create(user string, roles []string, duration *string) (*Token, 
 		return nil, err
 	}
 
-	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(bs))
-	if err != nil {
-		return nil, err
-	}
-
-	res, err := t.c.client.Do(req)
+	res, err := t.c.post(url, bytes.NewReader(bs))
 	if err != nil {
 		return nil, err
 	}

@@ -2,6 +2,7 @@ package rundeck
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 )
@@ -49,6 +50,16 @@ func (c *Client) GET(url string) (*http.Response, error) {
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
+	}
+
+	return c.client.Do(req)
+}
+
+// POST uses the rundeck client to perform a POST request
+func (c *Client) post(url string, body io.Reader) (*http.Response, error) {
+	req, err := http.NewRequest(http.MethodPost, url, body)
+	if err != nil {
+		return nil, nil
 	}
 
 	return c.client.Do(req)
