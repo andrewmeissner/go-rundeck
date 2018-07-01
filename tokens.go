@@ -32,12 +32,7 @@ func (c *Client) Tokens() *Tokens {
 func (t *Tokens) List() ([]*Token, error) {
 	url := fmt.Sprintf("%s/tokens", t.c.RundeckAddr)
 
-	req, err := http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	res, err := t.c.client.Do(req)
+	res, err := t.c.Get(url)
 	if err != nil {
 		return nil, err
 	}
@@ -48,24 +43,14 @@ func (t *Tokens) List() ([]*Token, error) {
 	}
 
 	var tokenList []*Token
-	err = json.NewDecoder(res.Body).Decode(&tokenList)
-	if err != nil {
-		return nil, err
-	}
-
-	return tokenList, nil
+	return tokenList, json.NewDecoder(res.Body).Decode(&tokenList)
 }
 
 // User returns the tokens associated with the supplied user
 func (t *Tokens) User(user string) ([]*Token, error) {
 	url := fmt.Sprintf("%s/tokens/%s", t.c.RundeckAddr, user)
 
-	req, err := http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	res, err := t.c.client.Do(req)
+	res, err := t.c.Get(url)
 	if err != nil {
 		return nil, err
 	}
@@ -76,24 +61,14 @@ func (t *Tokens) User(user string) ([]*Token, error) {
 	}
 
 	var tokenList []*Token
-	err = json.NewDecoder(res.Body).Decode(&tokenList)
-	if err != nil {
-		return nil, err
-	}
-
-	return tokenList, nil
+	return tokenList, json.NewDecoder(res.Body).Decode(&tokenList)
 }
 
 // Get returns the token by the supplied id
 func (t *Tokens) Get(id string) (*Token, error) {
 	url := fmt.Sprintf("%s/token/%s", t.c.RundeckAddr, id)
 
-	req, err := http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	res, err := t.c.client.Do(req)
+	res, err := t.c.Get(url)
 	if err != nil {
 		return nil, err
 	}
@@ -104,12 +79,7 @@ func (t *Tokens) Get(id string) (*Token, error) {
 	}
 
 	var token Token
-	err = json.NewDecoder(res.Body).Decode(&token)
-	if err != nil {
-		return nil, err
-	}
-
-	return &token, nil
+	return &token, json.NewDecoder(res.Body).Decode(&token)
 }
 
 // Create creates a token based on the supplied config.
@@ -151,12 +121,7 @@ func (t *Tokens) Create(user string, roles []string, duration *string) (*Token, 
 	}
 
 	var token Token
-	err = json.NewDecoder(res.Body).Decode(&token)
-	if err != nil {
-		return nil, err
-	}
-
-	return &token, nil
+	return &token, json.NewDecoder(res.Body).Decode(&token)
 }
 
 // Delete deletes a token
