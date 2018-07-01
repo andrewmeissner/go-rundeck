@@ -44,8 +44,8 @@ func sanitizeAddr(addr string) string {
 	return addr
 }
 
-// Get uses the rundeck client to perform a GET request
-func (c *Client) Get(url string) (*http.Response, error) {
+// GET uses the rundeck client to perform a GET request
+func (c *Client) GET(url string) (*http.Response, error) {
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err

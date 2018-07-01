@@ -37,7 +37,7 @@ func (c *Client) Users() *Users {
 func (u *Users) List() ([]*UserProfile, error) {
 	url := fmt.Sprintf("%s/user/list", u.c.RundeckAddr)
 
-	res, err := u.c.Get(url)
+	res, err := u.c.GET(url)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +62,7 @@ func (u *Users) Get(login *string) (*UserProfile, error) {
 		url += "/" + stringValue(login)
 	}
 
-	res, err := u.c.Get(url)
+	res, err := u.c.GET(url)
 	if err != nil {
 		return nil, err
 	}
