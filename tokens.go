@@ -32,7 +32,7 @@ func (c *Client) Tokens() *Tokens {
 func (t *Tokens) List() ([]*Token, error) {
 	url := fmt.Sprintf("%s/tokens", t.c.RundeckAddr)
 
-	res, err := t.c.GET(url)
+	res, err := t.c.get(url)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +50,7 @@ func (t *Tokens) List() ([]*Token, error) {
 func (t *Tokens) User(user string) ([]*Token, error) {
 	url := fmt.Sprintf("%s/tokens/%s", t.c.RundeckAddr, user)
 
-	res, err := t.c.GET(url)
+	res, err := t.c.get(url)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +68,7 @@ func (t *Tokens) User(user string) ([]*Token, error) {
 func (t *Tokens) Get(id string) (*Token, error) {
 	url := fmt.Sprintf("%s/token/%s", t.c.RundeckAddr, id)
 
-	res, err := t.c.GET(url)
+	res, err := t.c.get(url)
 	if err != nil {
 		return nil, err
 	}

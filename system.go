@@ -168,7 +168,7 @@ func (c *Client) System() *System {
 func (s *System) Info() (*SystemInfoResponse, error) {
 	url := fmt.Sprintf("%s/system/info", s.c.RundeckAddr)
 
-	res, err := s.c.GET(url)
+	res, err := s.c.get(url)
 	if err != nil {
 		return nil, err
 	}
@@ -186,7 +186,7 @@ func (s *System) Info() (*SystemInfoResponse, error) {
 func (s *System) LogStorage() (*LogStorageStats, error) {
 	url := fmt.Sprintf("%s/system/logstorage", s.c.RundeckAddr)
 
-	res, err := s.c.GET(url)
+	res, err := s.c.get(url)
 	if err != nil {
 		return nil, err
 	}
@@ -204,7 +204,7 @@ func (s *System) LogStorage() (*LogStorageStats, error) {
 func (s *System) IncompleteLogStorage() (*IncompleteLogStorageResponse, error) {
 	url := fmt.Sprintf("%s/system/logstorage/incomplete", s.c.RundeckAddr)
 
-	res, err := s.c.GET(url)
+	res, err := s.c.get(url)
 	if err != nil {
 		return nil, err
 	}

@@ -45,8 +45,7 @@ func sanitizeAddr(addr string) string {
 	return addr
 }
 
-// GET uses the rundeck client to perform a GET request
-func (c *Client) GET(url string) (*http.Response, error) {
+func (c *Client) get(url string) (*http.Response, error) {
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
@@ -55,7 +54,6 @@ func (c *Client) GET(url string) (*http.Response, error) {
 	return c.client.Do(req)
 }
 
-// POST uses the rundeck client to perform a POST request
 func (c *Client) post(url string, body io.Reader) (*http.Response, error) {
 	req, err := http.NewRequest(http.MethodPost, url, body)
 	if err != nil {
