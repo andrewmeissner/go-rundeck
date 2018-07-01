@@ -33,3 +33,15 @@ func TestLogStorage(t *testing.T) {
 		t.Errorf("logstraoge should have been populated and not nil")
 	}
 }
+
+func TestIncompleteLogStorage(t *testing.T) {
+	client := rundeck.NewClient(rundeck.DefaultConfig())
+	incLogStorage, err := client.System().IncompleteLogStorage()
+	if err != nil {
+		t.Error(err)
+	}
+
+	if incLogStorage == nil {
+		t.Errorf("incomplete log storage should not have been nil")
+	}
+}
