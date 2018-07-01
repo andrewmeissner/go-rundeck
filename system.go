@@ -7,13 +7,13 @@ import (
 	"time"
 )
 
-// SystemInfo is Rundeck server information and stats
-type SystemInfo struct {
-	System System `json:"system"`
+// SystemInfoResponse is Rundeck server information and stats
+type SystemInfoResponse struct {
+	System SystemInfo `json:"system"`
 }
 
-// System is information about the rundeck system
-type System struct {
+// SystemInfo is information about the rundeck system
+type SystemInfo struct {
 	Timestamp   Timestamp       `json:"timestamp"`
 	Rundeck     Rundeck         `json:"rundeck"`
 	Executions  ExecutionMode   `json:"executions"`
@@ -111,34 +111,64 @@ type LoadAverageStats struct {
 
 // Metrics contains a url to a page regarding metrics
 type Metrics struct {
-	urlInfo
-}
-
-// ThreadDump contains a url to a page regarding thread dump information
-type ThreadDump struct {
-	urlInfo
-}
-
-// HealthCheck contains a urll to a page regarding health information
-type HealthCheck struct {
-	urlInfo
-}
-
-type urlInfo struct {
 	HREF        string `json:"href"`
 	ContentType string `json:"contentType"`
 }
 
-// SystemInfo retrieves Rundeck server information and stats.
-func (c *Client) SystemInfo() (*SystemInfo, error) {
-	url := fmt.Sprintf("%s/system/info", c.RundeckAddr)
+// ThreadDump contains a url to a page regarding thread dump information
+type ThreadDump struct {
+	HREF        string `json:"href"`
+	ContentType string `json:"contentType"`
+}
 
-	req, err := http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		return nil, err
-	}
+// HealthCheck contains a urll to a page regarding health information
+type HealthCheck struct {
+	HREF        string `json:"href"`
+	ContentType string `json:"contentType"`
+}
 
-	res, err := c.client.Do(req)
+// LogStorageStats is the log storage info and stats
+type LogStorageStats struct {
+	Enabled         bool   `json:"enabled"`
+	PluginName      string `json:"pluginName"`
+	SucceededCount  int64  `json:"succeededCount"`
+	FailedCount     int64  `json:"failedCount"`
+	QueuedCount     int64  `json:"queuedCount"`
+	TotalCount      int64  `json:"totalCount"`
+	ImcompleteCount int64  `json:"incompleteCount"`
+	MissingCount    int64  `json:"missingCount"`
+}
+
+// LogStorageMetadata is information about an executions associated log storage
+type LogStorageMetadata struct {
+	LocalFilesPresent   bool      `json:"localFilesPresent"`
+	IncompleteFileTypes []string  `json:"incompleteFileTypes"`
+	Queued              bool      `json:"queued"`
+	Failed              bool      `json:"failed"`
+	Date                time.Time `json:"date"`
+}
+
+// IncompleteLogStorageResponse is the response from the associated endpoint
+type IncompleteLogStorageResponse struct {
+	PagingInfo
+	Executions []*Execution `json:"executions"`
+}
+
+// System is the information regarding system calls
+type System struct {
+	c *Client
+}
+
+// System interacts with the system api
+func (c *Client) System() *System {
+	return &System{c: c}
+}
+
+// Info retrieves Rundeck server information and stats.
+func (s *System) Info() (*SystemInfoResponse, error) {
+	url := fmt.Sprintf("%s/system/info", s.c.RundeckAddr)
+
+	res, err := s.c.Get(url)
 	if err != nil {
 		return nil, err
 	}
@@ -148,6 +178,42 @@ func (c *Client) SystemInfo() (*SystemInfo, error) {
 		return nil, makeError(res.Body)
 	}
 
-	var systemInfo SystemInfo
+	var systemInfo SystemInfoResponse
 	return &systemInfo, json.NewDecoder(res.Body).Decode(&systemInfo)
+}
+
+// LogStorage returns log storage information and stats
+func (s *System) LogStorage() (*LogStorageStats, error) {
+	url := fmt.Sprintf("%s/system/logstorage", s.c.RundeckAddr)
+
+	res, err := s.c.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		return nil, makeError(res.Body)
+	}
+
+	var logStorage LogStorageStats
+	return &logStorage, json.NewDecoder(res.Body).Decode(&logStorage)
+}
+
+// IncompleteLogStorage lists executions with incomplete logstorage
+func (s *System) IncompleteLogStorage() (*IncompleteLogStorageResponse, error) {
+	url := fmt.Sprintf("%s/system/logstorage/incomplete", s.c.RundeckAddr)
+
+	res, err := s.c.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		return nil, makeError(res.Body)
+	}
+
+	var incompleteLogStorageResponse IncompleteLogStorageResponse
+	return &incompleteLogStorageResponse, json.NewDecoder(res.Body).Decode(&incompleteLogStorageResponse)
 }
