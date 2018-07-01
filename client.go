@@ -62,3 +62,12 @@ func (c *Client) post(url string, body io.Reader) (*http.Response, error) {
 
 	return c.client.Do(req)
 }
+
+func (c *Client) delete(url string, body io.Reader) (*http.Response, error) {
+	req, err := http.NewRequest(http.MethodDelete, url, body)
+	if err != nil {
+		return nil, err
+	}
+
+	return c.client.Do(req)
+}

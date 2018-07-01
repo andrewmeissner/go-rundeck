@@ -123,12 +123,7 @@ func (t *Tokens) Create(user string, roles []string, duration *string) (*Token, 
 func (t *Tokens) Delete(id string) error {
 	url := fmt.Sprintf("%s/token/%s", t.c.RundeckAddr, id)
 
-	req, err := http.NewRequest(http.MethodDelete, url, nil)
-	if err != nil {
-		return err
-	}
-
-	res, err := t.c.client.Do(req)
+	res, err := t.c.delete(url, nil)
 	if err != nil {
 		return err
 	}
