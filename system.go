@@ -7,6 +7,11 @@ import (
 	"time"
 )
 
+const (
+	ExecutionModeActive  = "active"
+	ExecutionModePassive = "passive"
+)
+
 // SystemInfoResponse is Rundeck server information and stats
 type SystemInfoResponse struct {
 	System SystemInfo `json:"system"`
@@ -239,4 +244,43 @@ func (s *System) ResumeIncompleteLogStorage() (*ResumedIncompleteLogStorageRespo
 
 	var resumed ResumedIncompleteLogStorageResponse
 	return &resumed, json.NewDecoder(res.Body).Decode(&resumed)
+}
+
+// SetExecutionMode sets the execution mode
+func (s *System) SetExecutionMode(mode string) (*ExecutionMode, error) {
+	if mode != ExecutionModeActive && mode != ExecutionModePassive {
+		return nil, fmt.Errorf("received invalid execution mode %s - must be either \"%s\" or \"%s\"", mode, ExecutionModeActive, ExecutionModePassive)
+	}
+
+	url := fmt.Sprintf("%s/system/executions", s.c.RundeckAddr)
+
+	enabledDisabled := "enable"
+	if mode == ExecutionModePassive {
+		enabledDisabled = "disable"
+	}
+
+	url += "/" + enabledDisabled
+
+	res, err := s.c.post(url, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		return nil, makeError(res.Body)
+	}
+
+	var executionMode ExecutionMode
+	err = json.NewDecoder(res.Body).Decode(&executionMode)
+	if err != nil {
+		return nil, err
+	}
+
+	executionMode.Active = true
+	if executionMode.ExecutionMode == ExecutionModePassive {
+		executionMode.Active = false
+	}
+
+	return &executionMode, nil
 }

@@ -57,3 +57,36 @@ func TestResumeIncLogStorage(t *testing.T) {
 		t.Errorf("resumed should have been true for incomplete log storage on a bare-bones rundeck")
 	}
 }
+
+func TestSetExecutionMode(t *testing.T) {
+	client := rundeck.NewClient(rundeck.DefaultConfig())
+	_, err := client.System().SetExecutionMode("invalidMode")
+	if err == nil {
+		t.Errorf("set execution mode was passed an invalid mode - this should error")
+	}
+
+	res, err := client.System().SetExecutionMode(rundeck.ExecutionModePassive)
+	if err != nil {
+		t.Error(err)
+	}
+	if res == nil {
+		t.Errorf("response should not be nil")
+	}
+	if res.Active {
+		t.Errorf("active should be false on a passive set")
+	}
+	if res.ExecutionMode != rundeck.ExecutionModePassive {
+		t.Errorf("setting execution to passive failed")
+	}
+
+	res, err = client.System().SetExecutionMode(rundeck.ExecutionModeActive)
+	if err != nil {
+		t.Error(err)
+	}
+	if !res.Active {
+		t.Errorf("active should be true on an active set")
+	}
+	if res.ExecutionMode != rundeck.ExecutionModeActive {
+		t.Errorf("setting execution to active failed")
+	}
+}
