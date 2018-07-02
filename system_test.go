@@ -45,3 +45,15 @@ func TestIncompleteLogStorage(t *testing.T) {
 		t.Errorf("incomplete log storage should not have been nil")
 	}
 }
+
+func TestResumeIncLogStorage(t *testing.T) {
+	client := rundeck.NewClient(rundeck.DefaultConfig())
+	res, err := client.System().ResumeIncompleteLogStorage()
+	if err != nil {
+		t.Error(err)
+	}
+
+	if !res.Resumed {
+		t.Errorf("resumed should have been true for incomplete log storage on a bare-bones rundeck")
+	}
+}

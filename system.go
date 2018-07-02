@@ -154,6 +154,11 @@ type IncompleteLogStorageResponse struct {
 	Executions []*Execution `json:"executions"`
 }
 
+// ResumedIncompleteLogStorageResponse is the response body from the associated endpoint
+type ResumedIncompleteLogStorageResponse struct {
+	Resumed bool `json:"resumed"`
+}
+
 // System is the information regarding system calls
 type System struct {
 	c *Client
@@ -216,4 +221,22 @@ func (s *System) IncompleteLogStorage() (*IncompleteLogStorageResponse, error) {
 
 	var incompleteLogStorageResponse IncompleteLogStorageResponse
 	return &incompleteLogStorageResponse, json.NewDecoder(res.Body).Decode(&incompleteLogStorageResponse)
+}
+
+// ResumeIncompleteLogStorage resumes processing incomplete log storage uploads
+func (s *System) ResumeIncompleteLogStorage() (*ResumedIncompleteLogStorageResponse, error) {
+	url := fmt.Sprintf("%s/system/logstorage/incomplete/resume", s.c.RundeckAddr)
+
+	res, err := s.c.post(url, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		return nil, makeError(res.Body)
+	}
+
+	var resumed ResumedIncompleteLogStorageResponse
+	return &resumed, json.NewDecoder(res.Body).Decode(&resumed)
 }

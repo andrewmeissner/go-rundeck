@@ -2,10 +2,19 @@ package rundeck_test
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	rundeck "github.com/andrewmeissner/go-rundeck"
 )
+
+func TestMain(m *testing.M) {
+	if os.Getenv("RUNDECK_TOKEN") == "" {
+		fmt.Println("Please make sure RUNDECK_TOKEN is set before running tests")
+		os.Exit(1)
+	}
+	os.Exit(m.Run())
+}
 
 func TestNewClient(t *testing.T) {
 	client := rundeck.NewClient(&rundeck.Config{
