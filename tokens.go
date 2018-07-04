@@ -3,7 +3,6 @@ package rundeck
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"time"
 )
@@ -30,7 +29,7 @@ func (c *Client) Tokens() *Tokens {
 
 // List returns all tokens
 func (t *Tokens) List() ([]*Token, error) {
-	url := fmt.Sprintf("%s/tokens", t.c.RundeckAddr)
+	url := t.c.RundeckAddr + "/tokens"
 
 	res, err := t.c.get(url)
 	if err != nil {
@@ -48,7 +47,7 @@ func (t *Tokens) List() ([]*Token, error) {
 
 // User returns the tokens associated with the supplied user
 func (t *Tokens) User(user string) ([]*Token, error) {
-	url := fmt.Sprintf("%s/tokens/%s", t.c.RundeckAddr, user)
+	url := t.c.RundeckAddr + "/tokens/" + user
 
 	res, err := t.c.get(url)
 	if err != nil {
@@ -66,7 +65,7 @@ func (t *Tokens) User(user string) ([]*Token, error) {
 
 // Get returns the token by the supplied id
 func (t *Tokens) Get(id string) (*Token, error) {
-	url := fmt.Sprintf("%s/token/%s", t.c.RundeckAddr, id)
+	url := t.c.RundeckAddr + "/token/" + id
 
 	res, err := t.c.get(url)
 	if err != nil {
@@ -89,7 +88,7 @@ func (t *Tokens) Get(id string) (*Token, error) {
 // Unfortunately, this isn't a go parseable duration.  "120d" is understood by Rundeck
 // while "2880h0m0s" is not (what time.Duration.String() returns for the equivalence).
 func (t *Tokens) Create(user string, roles []string, duration *string) (*Token, error) {
-	url := fmt.Sprintf("%s/tokens", t.c.RundeckAddr)
+	url := t.c.RundeckAddr + "/tokens"
 
 	payload := map[string]interface{}{
 		"user":  user,
@@ -121,7 +120,7 @@ func (t *Tokens) Create(user string, roles []string, duration *string) (*Token, 
 
 // Delete deletes a token
 func (t *Tokens) Delete(id string) error {
-	url := fmt.Sprintf("%s/token/%s", t.c.RundeckAddr, id)
+	url := t.c.RundeckAddr + "/token/" + id
 
 	res, err := t.c.delete(url, nil)
 	if err != nil {

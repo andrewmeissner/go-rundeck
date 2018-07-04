@@ -176,7 +176,7 @@ func (c *Client) System() *System {
 
 // Info retrieves Rundeck server information and stats.
 func (s *System) Info() (*SystemInfoResponse, error) {
-	url := fmt.Sprintf("%s/system/info", s.c.RundeckAddr)
+	url := s.c.RundeckAddr + "/system/info"
 
 	res, err := s.c.get(url)
 	if err != nil {
@@ -194,7 +194,7 @@ func (s *System) Info() (*SystemInfoResponse, error) {
 
 // LogStorage returns log storage information and stats
 func (s *System) LogStorage() (*LogStorageStats, error) {
-	url := fmt.Sprintf("%s/system/logstorage", s.c.RundeckAddr)
+	url := s.c.RundeckAddr + "/system/logstorage"
 
 	res, err := s.c.get(url)
 	if err != nil {
@@ -212,7 +212,7 @@ func (s *System) LogStorage() (*LogStorageStats, error) {
 
 // IncompleteLogStorage lists executions with incomplete logstorage
 func (s *System) IncompleteLogStorage() (*IncompleteLogStorageResponse, error) {
-	url := fmt.Sprintf("%s/system/logstorage/incomplete", s.c.RundeckAddr)
+	url := s.c.RundeckAddr + "/system/logstorage/incomplete"
 
 	res, err := s.c.get(url)
 	if err != nil {
@@ -230,7 +230,7 @@ func (s *System) IncompleteLogStorage() (*IncompleteLogStorageResponse, error) {
 
 // ResumeIncompleteLogStorage resumes processing incomplete log storage uploads
 func (s *System) ResumeIncompleteLogStorage() (*ResumedIncompleteLogStorageResponse, error) {
-	url := fmt.Sprintf("%s/system/logstorage/incomplete/resume", s.c.RundeckAddr)
+	url := s.c.RundeckAddr + "/system/logstorage/incomplete/resume"
 
 	res, err := s.c.post(url, nil)
 	if err != nil {
@@ -252,7 +252,7 @@ func (s *System) SetExecutionMode(mode string) (*ExecutionMode, error) {
 		return nil, fmt.Errorf("received invalid execution mode %s - must be either \"%s\" or \"%s\"", mode, ExecutionModeActive, ExecutionModePassive)
 	}
 
-	url := fmt.Sprintf("%s/system/executions", s.c.RundeckAddr)
+	url := s.c.RundeckAddr + "/system/executions"
 
 	enabledDisabled := "enable"
 	if mode == ExecutionModePassive {

@@ -35,7 +35,7 @@ func (c *Client) Users() *Users {
 
 // List returns a list of all the users
 func (u *Users) List() ([]*UserProfile, error) {
-	url := fmt.Sprintf("%s/user/list", u.c.RundeckAddr)
+	url := u.c.RundeckAddr + "/user/list"
 
 	res, err := u.c.get(url)
 	if err != nil {
@@ -56,7 +56,7 @@ func (u *Users) List() ([]*UserProfile, error) {
 // If the login parameter is nil, the profile associated with
 // the supplied auth token will be returned.
 func (u *Users) Get(login *string) (*UserProfile, error) {
-	url := fmt.Sprintf("%s/user/info", u.c.RundeckAddr)
+	url := u.c.RundeckAddr + "/user/info"
 
 	if login != nil {
 		url += "/" + stringValue(login)
@@ -85,7 +85,7 @@ func (u *Users) Modify(login *string, input *ModifyUserInput) (*UserProfile, err
 		return nil, fmt.Errorf("the parameter ModifyUserInput cannot be nil")
 	}
 
-	url := fmt.Sprintf("%s/user/info", u.c.RundeckAddr)
+	url := u.c.RundeckAddr + "/user/info"
 
 	if login != nil {
 		url += "/" + stringValue(login)

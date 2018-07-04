@@ -73,7 +73,7 @@ func (cs *ClusterScheduler) TakeoverSchedule(input *TakeoverScheduleInput) (*Tak
 	if input == nil {
 		return nil, fmt.Errorf("input cannot be nil")
 	}
-	url := fmt.Sprintf("%s/scheduler/takeover", cs.c.RundeckAddr)
+	url := cs.c.RundeckAddr + "/scheduler/takeover"
 
 	bs, err := json.Marshal(input)
 	if err != nil {
@@ -97,10 +97,10 @@ func (cs *ClusterScheduler) TakeoverSchedule(input *TakeoverScheduleInput) (*Tak
 // ListScheduledJobs lists scheduled jobs with the schedule owned by the server with the specified uuid.
 // If uuid is nil, then the client server will be used.
 func (cs *ClusterScheduler) ListScheduledJobs(uuid *string) ([]*Job, error) {
-	url := fmt.Sprintf("%s/scheduler", cs.c.RundeckAddr)
+	url := cs.c.RundeckAddr + "/scheduler"
 
 	if uuid != nil {
-		url += fmt.Sprintf("/server/%s", stringValue(uuid))
+		url += "/server/" + stringValue(uuid)
 	}
 
 	url += "/jobs"

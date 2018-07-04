@@ -1,9 +1,9 @@
 package rundeck
 
 import (
-	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -33,7 +33,7 @@ func NewClient(config *Config) *Client {
 				underlyingTransport: http.DefaultTransport,
 			},
 		},
-		RundeckAddr: fmt.Sprintf("%s/api/%d", sanitizeAddr(config.ServerURL), config.APIVersion),
+		RundeckAddr: sanitizeAddr(config.ServerURL) + "/api/" + strconv.Itoa(config.APIVersion),
 	}
 }
 
