@@ -11,4 +11,9 @@ type Job struct {
 	HREF            string            `json:"href"`
 	Permalink       string            `json:"permalink"`
 	Options         map[string]string `json:"options"`
+	Scheduled       bool              `json:"scheduled"`
+	ScheduleEnabled bool              `json:"scheduleEnabled"`
+	Enabled         bool              `json:"enabled"`
+	ServerNodeUUID  string            `json:"serverNodeUUID"`
+	ServerOwner     bool              `json:"serverOwner"`
 }
