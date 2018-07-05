@@ -192,60 +192,6 @@ func (s *System) Info() (*SystemInfoResponse, error) {
 	return &systemInfo, json.NewDecoder(res.Body).Decode(&systemInfo)
 }
 
-// LogStorage returns log storage information and stats
-func (s *System) LogStorage() (*LogStorageStats, error) {
-	url := s.c.RundeckAddr + "/system/logstorage"
-
-	res, err := s.c.get(url)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		return nil, makeError(res.Body)
-	}
-
-	var logStorage LogStorageStats
-	return &logStorage, json.NewDecoder(res.Body).Decode(&logStorage)
-}
-
-// IncompleteLogStorage lists executions with incomplete logstorage
-func (s *System) IncompleteLogStorage() (*IncompleteLogStorageResponse, error) {
-	url := s.c.RundeckAddr + "/system/logstorage/incomplete"
-
-	res, err := s.c.get(url)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		return nil, makeError(res.Body)
-	}
-
-	var incompleteLogStorageResponse IncompleteLogStorageResponse
-	return &incompleteLogStorageResponse, json.NewDecoder(res.Body).Decode(&incompleteLogStorageResponse)
-}
-
-// ResumeIncompleteLogStorage resumes processing incomplete log storage uploads
-func (s *System) ResumeIncompleteLogStorage() (*ResumedIncompleteLogStorageResponse, error) {
-	url := s.c.RundeckAddr + "/system/logstorage/incomplete/resume"
-
-	res, err := s.c.post(url, nil)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		return nil, makeError(res.Body)
-	}
-
-	var resumed ResumedIncompleteLogStorageResponse
-	return &resumed, json.NewDecoder(res.Body).Decode(&resumed)
-}
-
 // SetExecutionMode sets the execution mode
 func (s *System) SetExecutionMode(mode string) (*ExecutionMode, error) {
 	if mode != ExecutionModeActive && mode != ExecutionModePassive {
