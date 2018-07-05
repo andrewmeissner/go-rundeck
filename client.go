@@ -54,10 +54,36 @@ func (c *Client) get(url string) (*http.Response, error) {
 	return c.client.Do(req)
 }
 
+func (c *Client) getWithAdditionalHeaders(url string, headers map[string]string) (*http.Response, error) {
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	for k, v := range headers {
+		req.Header.Add(k, v)
+	}
+
+	return c.client.Do(req)
+}
+
 func (c *Client) post(url string, body io.Reader) (*http.Response, error) {
 	req, err := http.NewRequest(http.MethodPost, url, body)
 	if err != nil {
 		return nil, err
+	}
+
+	return c.client.Do(req)
+}
+
+func (c *Client) postWithAdditionalHeaders(url string, headers map[string]string, body io.Reader) (*http.Response, error) {
+	req, err := http.NewRequest(http.MethodPost, url, body)
+	if err != nil {
+		return nil, err
+	}
+
+	for k, v := range headers {
+		req.Header.Add(k, v)
 	}
 
 	return c.client.Do(req)
