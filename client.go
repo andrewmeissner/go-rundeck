@@ -60,9 +60,7 @@ func (c *Client) getWithAdditionalHeaders(url string, headers map[string]string)
 		return nil, err
 	}
 
-	for k, v := range headers {
-		req.Header.Add(k, v)
-	}
+	c.addHeaders(req, headers)
 
 	return c.client.Do(req)
 }
@@ -82,9 +80,7 @@ func (c *Client) postWithAdditionalHeaders(url string, headers map[string]string
 		return nil, err
 	}
 
-	for k, v := range headers {
-		req.Header.Add(k, v)
-	}
+	c.addHeaders(req, headers)
 
 	return c.client.Do(req)
 }
@@ -98,6 +94,17 @@ func (c *Client) put(url string, body io.Reader) (*http.Response, error) {
 	return c.client.Do(req)
 }
 
+func (c *Client) putWithAdditionalHeaders(url string, headers map[string]string, body io.Reader) (*http.Response, error) {
+	req, err := http.NewRequest(http.MethodPut, url, body)
+	if err != nil {
+		return nil, err
+	}
+
+	c.addHeaders(req, headers)
+
+	return c.client.Do(req)
+}
+
 func (c *Client) delete(url string, body io.Reader) (*http.Response, error) {
 	req, err := http.NewRequest(http.MethodDelete, url, body)
 	if err != nil {
@@ -105,4 +112,10 @@ func (c *Client) delete(url string, body io.Reader) (*http.Response, error) {
 	}
 
 	return c.client.Do(req)
+}
+
+func (c *Client) addHeaders(req *http.Request, headers map[string]string) {
+	for k, v := range headers {
+		req.Header.Add(k, v)
+	}
 }

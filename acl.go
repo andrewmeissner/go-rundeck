@@ -57,10 +57,7 @@ func (a *ACL) List() (*ListACLsResponse, error) {
 
 // Get retrieves the YAML text of the ACL Policy file.  The contents of the file as a []byte will be returned.
 func (a *ACL) Get(name string) ([]byte, error) {
-	if !strings.HasSuffix(name, aclPolicySuffix) {
-		name += aclPolicySuffix
-	}
-	url := a.c.RundeckAddr + "/system/acl/" + name
+	url := a.c.RundeckAddr + "/system/acl/" + a.sanitizeACLName(name)
 
 	res, err := a.c.getWithAdditionalHeaders(url, map[string]string{"Accept": "text/plain"})
 	if err != nil {
@@ -78,10 +75,7 @@ func (a *ACL) Get(name string) ([]byte, error) {
 
 // Create is used to create an ACL policy
 func (a *ACL) Create(name string, policy []byte) error {
-	if !strings.HasSuffix(name, aclPolicySuffix) {
-		name += aclPolicySuffix
-	}
-	url := a.c.RundeckAddr + "/system/acl/" + name
+	url := a.c.RundeckAddr + "/system/acl/" + a.sanitizeACLName(name)
 
 	res, err := a.c.postWithAdditionalHeaders(url, map[string]string{"Content-Type": "text/plain"}, bytes.NewReader(policy))
 	if err != nil {
@@ -94,4 +88,45 @@ func (a *ACL) Create(name string, policy []byte) error {
 	}
 
 	return nil
+}
+
+// Update updates an existing acl policy
+func (a *ACL) Update(name string, policy []byte) error {
+	url := a.c.RundeckAddr + "/system/acl/" + sanitizeAddr(name)
+
+	res, err := a.c.putWithAdditionalHeaders(url, map[string]string{"Content-Type": "text/plain"}, bytes.NewReader(policy))
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		return makeError(res.Body)
+	}
+
+	return nil
+}
+
+// Delete removes an ACL polciy file
+func (a *ACL) Delete(name string) error {
+	url := a.c.RundeckAddr + "/system/acl/" + sanitizeAddr(name)
+
+	res, err := a.c.delete(url, nil)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusNoContent {
+		return makeError(res.Body)
+	}
+
+	return nil
+}
+
+func (a *ACL) sanitizeACLName(name string) string {
+	if !strings.HasSuffix(name, aclPolicySuffix) {
+		name += aclPolicySuffix
+	}
+	return name
 }
