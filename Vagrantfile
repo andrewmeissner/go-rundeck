@@ -7,7 +7,8 @@ Vagrant.configure("2") do |config|
         d.env = {
             "RUNDECK_PASSWORD": "admin",
             "RUNDECK_ADMIN_PASSWORD": "admin",
-            "EXTERNAL_SERVER_URL": "http://localhost:4440"
+            "EXTERNAL_SERVER_URL": "http://localhost:4440",
+            "CLUSTER_MODE": "true"
         }
     end
    end

@@ -60,6 +60,26 @@ func TestCreateACL(t *testing.T) {
 	}
 }
 
+func TestGetACL(t *testing.T) {
+	client := rundeck.NewClient(rundeck.DefaultConfig())
+	bs, err := client.ACL().Get("test")
+	if err != nil {
+		t.Error(err)
+	}
+
+	testBS := []byte(testPolicy)
+
+	if len(bs) != len(testBS) {
+		t.Errorf("policy from GET is different length than policy from UPDATE")
+	}
+
+	for i := 0; i < len(bs); i++ {
+		if bs[i] != testBS[i] {
+			t.Errorf("byte comparison of policies yielded different results")
+		}
+	}
+}
+
 func TestUpdateACL(t *testing.T) {
 	if err := rundeck.NewClient(rundeck.DefaultConfig()).ACL().Update("test", []byte(testPolicy)); err != nil {
 		t.Error(err)

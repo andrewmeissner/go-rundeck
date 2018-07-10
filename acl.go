@@ -3,6 +3,7 @@ package rundeck
 import (
 	"bytes"
 	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"strings"
 )
@@ -69,8 +70,7 @@ func (a *ACL) Get(name string) ([]byte, error) {
 		return nil, makeError(res.Body)
 	}
 
-	var bs []byte
-	return bs, json.NewDecoder(res.Body).Decode(&bs)
+	return ioutil.ReadAll(res.Body)
 }
 
 // Create is used to create an ACL policy
@@ -92,7 +92,7 @@ func (a *ACL) Create(name string, policy []byte) error {
 
 // Update updates an existing acl policy
 func (a *ACL) Update(name string, policy []byte) error {
-	url := a.c.RundeckAddr + "/system/acl/" + sanitizeAddr(name)
+	url := a.c.RundeckAddr + "/system/acl/" + a.sanitizeACLName(name)
 
 	res, err := a.c.putWithAdditionalHeaders(url, map[string]string{"Content-Type": "text/plain"}, bytes.NewReader(policy))
 	if err != nil {
