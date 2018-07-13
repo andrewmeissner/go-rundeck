@@ -1,15 +1,54 @@
 Vagrant.configure("2") do |config|
-   config.vm.define "rundeck" do |rundeck|
-    rundeck.vm.provider "docker" do |d|
-        d.image = "jordan/rundeck"
-        d.name = "rundeck"
-        d.ports = ["4440:4440"]
-        d.env = {
-            "RUNDECK_PASSWORD": "admin",
-            "RUNDECK_ADMIN_PASSWORD": "admin",
-            "EXTERNAL_SERVER_URL": "http://localhost:4440",
-            "CLUSTER_MODE": "true"
-        }
+    #  /var/rundeck/projects/<PROJECT>/etc/resources.xml
+    dockerIP = "172.17.0.2"
+
+    config.vm.define "postgres" do |postgres|
+        postgres.vm.provider "docker" do |d|
+            d.image = "postgres"
+            d.name = "postgres"
+            d.ports = ["5432:5432"]
+            d.env = {
+                "POSTGRES_PASSWORD": "rundeckpassword",
+                "POSTGRES_USER": "rundeck",
+                "POSTGRES_DB": "rundeckdb"
+            }
+        end
     end
-   end
+
+    config.vm.define "rundeck-c1" do |rundeck|
+        rundeck.vm.provider "docker" do |d|
+            d.image = "jordan/rundeck"
+            d.name = "rundeck-c1"
+            d.ports = ["4440:4440"]
+            d.env = {
+                "RUNDECK_PASSWORD": "rundeckpassword",
+                "RUNDECK_ADMIN_PASSWORD": "admin",
+                "EXTERNAL_SERVER_URL": "http://localhost:4440",
+                "CLUSTER_MODE": "true",
+                "DATABASE_URL": "jdbc:postgresql://#{dockerIP}:5432/rundeckdb",
+                "RUNDECK_STORAGE_PROVIDER": "db",
+                "RUNDECK_PROJECT_STORAGE_TYPE": "db",
+                "NO_LOCAL_MYSQL": "true"
+            }
+        end
+    end
+
+    config.vm.define "rundeck-c2" do |rundeck|
+        rundeck.vm.provider "docker" do |d|
+            d.image = "jordan/rundeck"
+            d.name = "rundeck-c2"
+            d.ports = ["4441:4440"]
+            d.env = {
+                "RUNDECK_PASSWORD": "rundeckpassword",
+                "RUNDECK_ADMIN_PASSWORD": "admin",
+                "EXTERNAL_SERVER_URL": "http://localhost:4441",
+                "CLUSTER_MODE": "true",
+                "DATABASE_URL": "jdbc:postgresql://#{dockerIP}:5432/rundeckdb",
+                "RUNDECK_STORAGE_PROVIDER": "db",
+                "RUNDECK_PROJECT_STORAGE_TYPE": "db",
+                "NO_LOCAL_MYSQL": "true",
+                "SKIP_DATABASE_SETUP": "true"
+            }
+        end
+    end
 end
