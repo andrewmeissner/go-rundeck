@@ -109,7 +109,7 @@ func (a *ACL) Update(name string, policy []byte) error {
 
 // Delete removes an ACL polciy file
 func (a *ACL) Delete(name string) error {
-	url := a.c.RundeckAddr + "/system/acl/" + sanitizeAddr(name)
+	url := a.c.RundeckAddr + "/system/acl/" + a.sanitizeACLName(name)
 
 	res, err := a.c.delete(url, nil)
 	if err != nil {
