@@ -15,10 +15,10 @@ Vagrant.configure("2") do |config|
         end
     end
 
-    config.vm.define "rundeck-c1" do |rundeck|
+    config.vm.define "rundeck-1" do |rundeck|
         rundeck.vm.provider "docker" do |d|
             d.image = "jordan/rundeck"
-            d.name = "rundeck-c1"
+            d.name = "rundeck-1"
             d.ports = ["4440:4440"]
             d.env = {
                 "RUNDECK_PASSWORD": "rundeckpassword",
@@ -33,10 +33,10 @@ Vagrant.configure("2") do |config|
         end
     end
 
-    config.vm.define "rundeck-c2" do |rundeck|
+    config.vm.define "rundeck-2" do |rundeck|
         rundeck.vm.provider "docker" do |d|
             d.image = "jordan/rundeck"
-            d.name = "rundeck-c2"
+            d.name = "rundeck-2"
             d.ports = ["4441:4440"]
             d.env = {
                 "RUNDECK_PASSWORD": "rundeckpassword",
