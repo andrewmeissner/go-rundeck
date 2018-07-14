@@ -19,6 +19,12 @@ const (
 	JobLogLevelError   = "ERROR"
 )
 
+// TestConst1 tests godoc
+const TestConst1 = "test1"
+
+// TestConst2 tests godoc again
+const TestConst2 = "test2"
+
 // Job is information about a Rundeck job
 type Job struct {
 	ID              string            `json:"id"`
