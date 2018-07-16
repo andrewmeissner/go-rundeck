@@ -147,7 +147,6 @@ func (j *Jobs) Retry(jobID string, execID int64, input *RetryJobInput) (*Executi
 		return nil, makeError(res.Body)
 	}
 
-	// TODO: dbl check this is an execution
 	var execution Execution
 	return &execution, json.NewDecoder(res.Body).Decode(&execution)
 }
