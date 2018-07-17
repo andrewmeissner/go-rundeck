@@ -1,6 +1,5 @@
 Vagrant.configure("2") do |config|
     #  /var/rundeck/projects/<PROJECT>/etc/resources.xml
-    dockerIP = "172.17.0.2"
 
     config.vm.define "postgres" do |postgres|
         postgres.vm.provider "docker" do |d|
@@ -25,11 +24,12 @@ Vagrant.configure("2") do |config|
                 "RUNDECK_ADMIN_PASSWORD": "admin",
                 "EXTERNAL_SERVER_URL": "http://localhost:4440",
                 "CLUSTER_MODE": "true",
-                "DATABASE_URL": "jdbc:postgresql://#{dockerIP}:5432/rundeckdb",
+                "DATABASE_URL": "jdbc:postgresql://postgres:5432/rundeckdb",
                 "RUNDECK_STORAGE_PROVIDER": "db",
                 "RUNDECK_PROJECT_STORAGE_TYPE": "db",
                 "NO_LOCAL_MYSQL": "true"
             }
+            d.link("postgres:postgres")
         end
     end
 
@@ -43,12 +43,13 @@ Vagrant.configure("2") do |config|
                 "RUNDECK_ADMIN_PASSWORD": "admin",
                 "EXTERNAL_SERVER_URL": "http://localhost:4441",
                 "CLUSTER_MODE": "true",
-                "DATABASE_URL": "jdbc:postgresql://#{dockerIP}:5432/rundeckdb",
+                "DATABASE_URL": "jdbc:postgresql://postgres:5432/rundeckdb",
                 "RUNDECK_STORAGE_PROVIDER": "db",
                 "RUNDECK_PROJECT_STORAGE_TYPE": "db",
                 "NO_LOCAL_MYSQL": "true",
                 "SKIP_DATABASE_SETUP": "true"
             }
+            d.link("postgres:postgres")
         end
     end
 end
