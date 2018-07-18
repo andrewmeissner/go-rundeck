@@ -1,3 +1,5 @@
+# standup with the --no-parallel flag
+
 Vagrant.configure("2") do |config|
     #  /var/rundeck/projects/<PROJECT>/etc/resources.xml
 
