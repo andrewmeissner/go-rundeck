@@ -119,3 +119,11 @@ func (c *Client) addHeaders(req *http.Request, headers map[string]string) {
 		req.Header.Add(k, v)
 	}
 }
+
+func (c *Client) convertFiltersToSerializeableFormat(filters map[string]string) string {
+	var fs []string
+	for k, v := range filters {
+		fs = append(fs, k+": "+v)
+	}
+	return strings.Join(fs, " ")
+}

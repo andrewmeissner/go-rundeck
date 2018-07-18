@@ -50,10 +50,17 @@ type ListJobsInput struct {
 
 // RunJobInput are the optional paramenters passed when running a job
 type RunJobInput struct {
-	LogLevel string `json:"loglevel,omiempty"`
-	AsUser   string `json:"asUser,omitempty"`
-	// TODO: NodeFilters
-	// TODO: Filter
+	LogLevel  string
+	AsUser    string
+	Filters   map[string]string
+	RunAtTime time.Time
+	Options   map[string]string
+}
+
+type runJobInputSerializeable struct {
+	LogLevel  string            `json:"loglevel,omitempty"`
+	AsUser    string            `json:"asUser,omitempty"`
+	Filter    string            `json:"filter,omitempty"`
 	RunAtTime time.Time         `json:"runAtTime,omitempty"`
 	Options   map[string]string `json:"options,omitempty"`
 }
@@ -103,7 +110,7 @@ func (j *Jobs) Run(jobID string, input *RunJobInput) (*Execution, error) {
 
 	var body io.Reader
 	if input != nil {
-		bs, err := json.Marshal(input)
+		bs, err := json.Marshal(j.convertToSerializeable(input))
 		if err != nil {
 			return nil, err
 		}
@@ -190,4 +197,20 @@ func (j *Jobs) urlEncodeListInput(rawURL string, input *ListJobsInput) (string, 
 	}
 
 	return query.Encode(), nil
+}
+
+func (j *Jobs) convertToSerializeable(input *RunJobInput) *runJobInputSerializeable {
+	var serializeable runJobInputSerializeable
+	serializeable.AsUser = input.AsUser
+	serializeable.LogLevel = input.LogLevel
+	if input.Options != nil {
+		serializeable.Options = input.Options
+	}
+	serializeable.RunAtTime = input.RunAtTime
+
+	if input.Filters != nil {
+		serializeable.Filter = j.c.convertFiltersToSerializeableFormat(input.Filters)
+	}
+
+	return &serializeable
 }
