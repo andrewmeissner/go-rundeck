@@ -41,3 +41,27 @@ func TestNewClient(t *testing.T) {
 		t.Errorf("default client's rundeck addr is malformed: got %s", defaultClient.RundeckAddr)
 	}
 }
+
+func TestSetToken(t *testing.T) {
+	testTokenOne := "testTokenOne"
+	testTokenTwo := "testTokenTwo"
+	testURL := "http://localhost:4440"
+
+	configOne := rundeck.Config{
+		APIVersion:       rundeck.APIVersion24,
+		RundeckAuthToken: testTokenOne,
+		ServerURL:        testURL,
+	}
+
+	client := rundeck.NewClient(&configOne)
+
+	client.SetAPIToken(testTokenTwo)
+
+	if client.Config.RundeckAuthToken == testTokenOne {
+		t.Errorf("token should have been changed")
+	}
+
+	if client.Config.RundeckAuthToken != testTokenTwo {
+		t.Errorf("token was %s but should have been %s", client.Config.RundeckAuthToken, testTokenTwo)
+	}
+}

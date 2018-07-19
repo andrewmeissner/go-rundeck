@@ -37,6 +37,18 @@ func NewClient(config *Config) *Client {
 	}
 }
 
+// SetAPIToken will update the token (and associated client transport for the API calls)
+func (c *Client) SetAPIToken(token string) {
+	c.Config.RundeckAuthToken = token
+	c.client = &http.Client{
+		Jar: http.DefaultClient.Jar,
+		Transport: &rundeckTransport{
+			apiToken:            c.Config.RundeckAuthToken,
+			underlyingTransport: http.DefaultTransport,
+		},
+	}
+}
+
 // sanitizeAddr will remove all trailing slashes from the supplied ServerURL to ensure path correctness
 func sanitizeAddr(addr string) string {
 	for strings.HasSuffix(addr, "/") {

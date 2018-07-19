@@ -55,8 +55,16 @@ by:
 `
 
 func TestCreateACL(t *testing.T) {
-	if err := rundeck.NewClient(rundeck.DefaultConfig()).ACL().Create("test", []byte(testPolicy)); err != nil {
+	client := rundeck.NewClient(rundeck.DefaultConfig())
+
+	if err := client.ACL().Create("test", []byte(testPolicy)); err != nil {
 		t.Error(err)
+	}
+
+	client.SetAPIToken("badToken")
+
+	if err := client.ACL().Create("test", []byte("")); err == nil {
+		t.Errorf("badToken was submitted to create acl - this should return an unauthorized rundeck body")
 	}
 }
 
@@ -78,11 +86,23 @@ func TestGetACL(t *testing.T) {
 			t.Errorf("byte comparison of policies yielded different results")
 		}
 	}
+
+	client.SetAPIToken("badToken")
+	_, badTokenErr := client.ACL().Get("test")
+	if badTokenErr == nil {
+		t.Errorf("badToken was supplied to get acl - this should be a rundeck error")
+	}
 }
 
 func TestUpdateACL(t *testing.T) {
-	if err := rundeck.NewClient(rundeck.DefaultConfig()).ACL().Update("test", []byte(testPolicy)); err != nil {
+	client := rundeck.NewClient(rundeck.DefaultConfig())
+	if err := client.ACL().Update("test", []byte(testPolicy)); err != nil {
 		t.Error(err)
+	}
+
+	client.SetAPIToken("badToken")
+	if err := client.ACL().Update("test", []byte("")); err == nil {
+		t.Errorf("badToken was supplied to update acl - this should fail with rundeck unauthorized")
 	}
 }
 
@@ -95,6 +115,16 @@ func TestListACL(t *testing.T) {
 
 	if len(aclRes.Resources) == 0 {
 		t.Errorf("expected more than 0 acl resources")
+	}
+
+	client.SetAPIToken("badToken")
+	aclBadRes, err := client.ACL().List()
+	if err == nil {
+		t.Errorf("badToken was submitted to acl list - this should return a rundeck unauthorized error")
+	}
+
+	if aclBadRes != nil {
+		t.Errorf("badToken was submitted to acl list - this should return a rundeck unauthorized error")
 	}
 }
 
@@ -111,5 +141,10 @@ func TestDeleteACL(t *testing.T) {
 
 	if len(aclRes.Resources) != 0 {
 		t.Errorf("deleted resources should be empty")
+	}
+
+	client.SetAPIToken("badToken")
+	if err := client.ACL().Delete("test"); err == nil {
+		t.Errorf("badToken was supplied to delete acl - this should be a rundeck auth failure")
 	}
 }
