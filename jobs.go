@@ -106,6 +106,26 @@ type ImportJobsResponse struct {
 	Skipped   []*Job `json:"skipped,omitempty"`
 }
 
+// BulkDeleteInput contains a string slice of ids to delete in bulk
+type BulkDeleteInput struct {
+	IDList []string `json:"idlist"`
+}
+
+// BulkDeleteResponse is the response body from the bulk delete endpoint
+type BulkDeleteResponse struct {
+	RequestCount  int                 `json:"requestCount"`
+	AllSuccessful bool                `json:"allsuccessful"`
+	Succeeded     []*BulkDeleteObject `json:"successful,omitempty"`
+	Failed        []*BulkDeleteObject `json:"failed,omitempty"`
+}
+
+// BulkDeleteObject is an object in the BulkDeleteResponse slices
+type BulkDeleteObject struct {
+	ID        string `json:"id"`
+	ErrorCode string `json:"errorCode"`
+	Message   string `json:"message"`
+}
+
 // Jobs is information pertaining to jobs API endpoints
 type Jobs struct {
 	c *Client
@@ -281,6 +301,81 @@ func (j *Jobs) Import(project string, input *ImportJobsInput) (*ImportJobsRespon
 
 	var resp ImportJobsResponse
 	return &resp, json.NewDecoder(res.Body).Decode(&resp)
+}
+
+// GetDefinition returns a job definition as a slice of bytces in either xml or yaml
+func (j *Jobs) GetDefinition(id string, format *string) ([]byte, error) {
+	rawURL := j.c.RundeckAddr + "/job/" + id
+
+	returnFormat := JobFormatXML
+	if strings.ToLower(stringValue(format)) == JobFormatYAML {
+		returnFormat = JobFormatYAML
+	}
+
+	uri, err := url.Parse(rawURL)
+	if err != nil {
+		return nil, err
+	}
+
+	query := uri.Query()
+	query.Add("format", returnFormat)
+	uri.RawQuery = query.Encode()
+
+	res, err := j.c.get(uri.String())
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		return nil, makeError(res.Body)
+	}
+
+	return ioutil.ReadAll(res.Body)
+}
+
+// DeleteDefinition deletes a job definition
+func (j *Jobs) DeleteDefinition(id string) error {
+	rawURL := j.c.RundeckAddr + "/job/" + id
+
+	res, err := j.c.delete(rawURL, nil)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusNoContent {
+		return makeError(res.Body)
+	}
+
+	return nil
+}
+
+// BulkDelete deletes jobs in bulk by ID
+func (j *Jobs) BulkDelete(input *BulkDeleteInput) (*BulkDeleteResponse, error) {
+	if input == nil {
+		return nil, fmt.Errorf("bulk delete input cannot be nil")
+	}
+
+	rawURL := j.c.RundeckAddr + "/jobs/delete"
+
+	bs, err := json.Marshal(input)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := j.c.delete(rawURL, bytes.NewReader(bs))
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		return nil, makeError(res.Body)
+	}
+
+	var response BulkDeleteResponse
+	return &response, json.NewDecoder(res.Body).Decode(&response)
 }
 
 func (j *Jobs) urlEncodeListInput(rawURL string, input *ListJobsInput) (string, error) {
