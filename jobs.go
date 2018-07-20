@@ -26,6 +26,8 @@ const (
 	DuplicateoptionUpdate = "update"
 	UUIDOptionPreserve    = "preserve"
 	UUIDOptionRemove      = "remove"
+	ToggleKindExecution   = "execution"
+	ToggleKindSchedule    = "schedule"
 )
 
 // Job is information about a Rundeck job
@@ -106,24 +108,30 @@ type ImportJobsResponse struct {
 	Skipped   []*Job `json:"skipped,omitempty"`
 }
 
-// BulkDeleteInput contains a string slice of ids to delete in bulk
-type BulkDeleteInput struct {
-	IDList []string `json:"idlist"`
+// BulkModifyInput contains a string slice of ids to modify in bulk
+type BulkModifyInput struct {
+	IDs []string `json:"ids"`
 }
 
-// BulkDeleteResponse is the response body from the bulk delete endpoint
-type BulkDeleteResponse struct {
+// BulkModifyResponse is the response body from the bulk modify endpoint
+type BulkModifyResponse struct {
 	RequestCount  int                 `json:"requestCount"`
 	AllSuccessful bool                `json:"allsuccessful"`
-	Succeeded     []*BulkDeleteObject `json:"successful,omitempty"`
-	Failed        []*BulkDeleteObject `json:"failed,omitempty"`
+	Enabled       bool                `json:"enabled,omitempty"`
+	Succeeded     []*BulkModifyObject `json:"successful,omitempty"`
+	Failed        []*BulkModifyObject `json:"failed,omitempty"`
 }
 
-// BulkDeleteObject is an object in the BulkDeleteResponse slices
-type BulkDeleteObject struct {
+// BulkModifyObject is an object in the BulkModifyResponse slices
+type BulkModifyObject struct {
 	ID        string `json:"id"`
 	ErrorCode string `json:"errorCode"`
 	Message   string `json:"message"`
+}
+
+// SuccessResponse is a response containing whether or not the api call was a success
+type SuccessResponse struct {
+	Success bool `json:"success"`
 }
 
 // Jobs is information pertaining to jobs API endpoints
@@ -352,7 +360,7 @@ func (j *Jobs) DeleteDefinition(id string) error {
 }
 
 // BulkDelete deletes jobs in bulk by ID
-func (j *Jobs) BulkDelete(input *BulkDeleteInput) (*BulkDeleteResponse, error) {
+func (j *Jobs) BulkDelete(input *BulkModifyInput) (*BulkModifyResponse, error) {
 	if input == nil {
 		return nil, fmt.Errorf("bulk delete input cannot be nil")
 	}
@@ -374,8 +382,68 @@ func (j *Jobs) BulkDelete(input *BulkDeleteInput) (*BulkDeleteResponse, error) {
 		return nil, makeError(res.Body)
 	}
 
-	var response BulkDeleteResponse
+	var response BulkModifyResponse
 	return &response, json.NewDecoder(res.Body).Decode(&response)
+}
+
+// ToggleExecutionsOrSchedules toggles the executions or schedules of the supplied job
+func (j *Jobs) ToggleExecutionsOrSchedules(id string, enabled bool, toggleKind string) (*SuccessResponse, error) {
+	if toggleKind != ToggleKindExecution && toggleKind != ToggleKindSchedule {
+		return nil, fmt.Errorf(`toggleKind must be "execution" or "schedule"`)
+	}
+
+	rawURL := j.c.RundeckAddr + "/job/" + id + "/" + toggleKind
+
+	if enabled {
+		rawURL += "/enable"
+	} else {
+		rawURL += "/disable"
+	}
+
+	res, err := j.c.post(rawURL, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		return nil, makeError(res.Body)
+	}
+
+	var success SuccessResponse
+	return &success, json.NewDecoder(res.Body).Decode(&success)
+}
+
+// BulkToggleExecutionsOrSchedules toggles the execution or scheudle value of the suppplied job ids
+func (j *Jobs) BulkToggleExecutionsOrSchedules(input *BulkModifyInput, enabled bool, toggleKind string) (*BulkModifyResponse, error) {
+	if input == nil {
+		return nil, fmt.Errorf("input cannot be nil")
+	}
+
+	if toggleKind != ToggleKindExecution && toggleKind != ToggleKindSchedule {
+		return nil, fmt.Errorf(`toggleKind must be "execution" or "schedule"`)
+	}
+
+	rawURL := j.c.RundeckAddr + "/jobs/" + toggleKind
+
+	if enabled {
+		rawURL += "/enable"
+	} else {
+		rawURL += "/disable"
+	}
+
+	res, err := j.c.post(rawURL, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		return nil, makeError(res.Body)
+	}
+
+	var bulk BulkModifyResponse
+	return &bulk, json.NewDecoder(res.Body).Decode(&bulk)
 }
 
 func (j *Jobs) urlEncodeListInput(rawURL string, input *ListJobsInput) (string, error) {
