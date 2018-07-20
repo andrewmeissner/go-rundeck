@@ -32,21 +32,22 @@ const (
 
 // Job is information about a Rundeck job
 type Job struct {
-	ID              string            `json:"id,omitempty"`
-	AverageDuration int64             `json:"averageDuration,omitempty"`
-	Name            string            `json:"name,omitempty"`
-	Group           string            `json:"group,omitempty"`
-	Project         string            `json:"project,omitempty"`
-	Description     string            `json:"description,omitempty"`
-	HREF            string            `json:"href,omitempty"`
-	Permalink       string            `json:"permalink,omitempty"`
-	Options         map[string]string `json:"options,omitempty"`
-	Scheduled       bool              `json:"scheduled,omitempty"`
-	ScheduleEnabled bool              `json:"scheduleEnabled,omitempty"`
-	Enabled         bool              `json:"enabled,omitempty"`
-	ServerNodeUUID  string            `json:"serverNodeUUID,omitempty"`
-	ServerOwner     bool              `json:"serverOwner,omitempty"`
-	Index           int               `json:"index,omitempty"`
+	ID                     string            `json:"id,omitempty"`
+	AverageDuration        int64             `json:"averageDuration,omitempty"`
+	Name                   string            `json:"name,omitempty"`
+	Group                  string            `json:"group,omitempty"`
+	Project                string            `json:"project,omitempty"`
+	Description            string            `json:"description,omitempty"`
+	HREF                   string            `json:"href,omitempty"`
+	Permalink              string            `json:"permalink,omitempty"`
+	Options                map[string]string `json:"options,omitempty"`
+	Scheduled              bool              `json:"scheduled,omitempty"`
+	ScheduleEnabled        bool              `json:"scheduleEnabled,omitempty"`
+	Enabled                bool              `json:"enabled,omitempty"`
+	ServerNodeUUID         string            `json:"serverNodeUUID,omitempty"`
+	ServerOwner            bool              `json:"serverOwner,omitempty"`
+	Index                  int               `json:"index,omitempty"`
+	NextScheduledExecution time.Time         `json:"nextScheduledExecution,omitempty"`
 }
 
 // ListJobsInput adds parameters to the endpoint for listing jobs
