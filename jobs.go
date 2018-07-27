@@ -513,7 +513,11 @@ func (j *Jobs) UploadFileForJobOption(id, optionName string, content []byte, fil
 	}
 	uri.RawQuery = query.Encode()
 
-	res, err := j.c.post(uri.String(), bytes.NewReader(content))
+	headers := map[string]string{
+		"Content-Type": "application/octet-stream",
+	}
+
+	res, err := j.c.postWithAdditionalHeaders(uri.String(), headers, bytes.NewReader(content))
 	if err != nil {
 		return nil, err
 	}
