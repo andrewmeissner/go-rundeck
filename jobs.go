@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"math"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -28,6 +29,10 @@ const (
 	UUIDOptionRemove      = "remove"
 	ToggleKindExecution   = "execution"
 	ToggleKindSchedule    = "schedule"
+	FileStateTemp         = "temp"
+	FileStateDeleted      = "deleted"
+	FileStateExpired      = "expired"
+	FileStateRetained     = "retained"
 )
 
 // Job is information about a Rundeck job
@@ -133,6 +138,33 @@ type BulkModifyObject struct {
 // SuccessResponse is a response containing whether or not the api call was a success
 type SuccessResponse struct {
 	Success bool `json:"success"`
+}
+
+// UploadFileResponse is the response from uploading a file for a job.  It will contain the fileKey.
+type UploadFileResponse struct {
+	Total   int               `json:"total"`
+	Options map[string]string `json:"options"`
+}
+
+// UploadedFilesResponse returns the files uploaded for a particular job
+type UploadedFilesResponse struct {
+	PagingInfo
+	File []*FileOption `json:"files"`
+}
+
+// FileOption is the metadata about a file that was uploaded for a job option
+type FileOption struct {
+	ID             string    `json:"id"`
+	User           string    `json:"user"`
+	FileState      string    `json:"fileState"`
+	SHA            string    `json:"sha"`
+	JobID          string    `json:"jobId"`
+	DateCreated    time.Time `json:"dateCreated"`
+	ServerNodeUUID string    `json:"serverNodeUUID"`
+	FileName       *string   `json:"fileName"`
+	Size           int64     `json:"size"`
+	ExpirationDate time.Time `json:"expirationDate"`
+	ExecID         *int64    `json:"execId"`
 }
 
 // Jobs is information pertaining to jobs API endpoints
@@ -463,6 +495,86 @@ func (j *Jobs) GetMetadata(id string) (*Job, error) {
 
 	var job Job
 	return &job, json.NewDecoder(res.Body).Decode(&job)
+}
+
+// UploadFileForJobOption uploads a file to rundeck for a job option and returns the file key
+func (j *Jobs) UploadFileForJobOption(id, optionName string, content []byte, fileName *string) (*UploadFileResponse, error) {
+	rawURL := j.c.RundeckAddr + "/job/" + id + "/input/file"
+
+	uri, err := url.Parse(rawURL)
+	if err != nil {
+		return nil, err
+	}
+
+	query := uri.Query()
+	query.Add("optionName", optionName)
+	if fileName != nil {
+		query.Add("fileName", stringValue(fileName))
+	}
+	uri.RawQuery = query.Encode()
+
+	res, err := j.c.post(uri.String(), bytes.NewReader(content))
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		return nil, makeError(res.Body)
+	}
+
+	var uploadResponse UploadFileResponse
+	return &uploadResponse, json.NewDecoder(res.Body).Decode(&uploadResponse)
+}
+
+// ListFilesUploadedForJob returns files that were uploaded for a particular job
+func (j *Jobs) ListFilesUploadedForJob(id string, fileState *string, max *int) (*UploadedFilesResponse, error) {
+	rawURL := j.c.RundeckAddr + "/job/" + id + "/input/files"
+
+	uri, err := url.Parse(rawURL)
+	if err != nil {
+		return nil, err
+	}
+
+	query := uri.Query()
+	if fileState != nil {
+		query.Add("fileState", stringValue(fileState))
+	}
+	if max != nil {
+		query.Add("max", strconv.Itoa(math.MaxInt8))
+	}
+	uri.RawQuery = query.Encode()
+
+	res, err := j.c.get(uri.String())
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		return nil, makeError(res.Body)
+	}
+
+	var files UploadedFilesResponse
+	return &files, json.NewDecoder(res.Body).Decode(&files)
+}
+
+// FileInfo returns information about an uploaded file
+func (j *Jobs) FileInfo(id string) (*FileOption, error) {
+	rawURL := j.c.RundeckAddr + "/jobs/file/" + id
+
+	res, err := j.c.get(rawURL)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		return nil, makeError(res.Body)
+	}
+
+	var info FileOption
+	return &info, json.NewDecoder(res.Body).Decode(&info)
 }
 
 func (j *Jobs) urlEncodeListInput(rawURL string, input *ListJobsInput) (string, error) {
