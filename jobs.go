@@ -447,6 +447,24 @@ func (j *Jobs) BulkToggleExecutionsOrSchedules(input *BulkModifyInput, enabled b
 	return &bulk, json.NewDecoder(res.Body).Decode(&bulk)
 }
 
+// GetMetadata returns basic information about a job
+func (j *Jobs) GetMetadata(id string) (*Job, error) {
+	rawURL := j.c.RundeckAddr + "/job/" + id + "/info"
+
+	res, err := j.c.get(rawURL)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		return nil, makeError(res.Body)
+	}
+
+	var job Job
+	return &job, json.NewDecoder(res.Body).Decode(&job)
+}
+
 func (j *Jobs) urlEncodeListInput(rawURL string, input *ListJobsInput) (string, error) {
 	uri, err := url.Parse(rawURL)
 	if err != nil {
