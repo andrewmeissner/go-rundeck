@@ -90,3 +90,20 @@ func (p *Projects) GetInfo(project string) (*ProjectInfo, error) {
 	var info ProjectInfo
 	return &info, json.NewDecoder(res.Body).Decode(&info)
 }
+
+// Delete removes an existing project
+func (p *Projects) Delete(project string) error {
+	rawURL := p.c.RundeckAddr + "/project/" + project
+
+	res, err := p.c.delete(rawURL, nil)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusNoContent {
+		return makeError(res.Body)
+	}
+
+	return nil
+}
