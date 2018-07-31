@@ -6,23 +6,25 @@ import (
 	rundeck "github.com/andrewmeissner/go-rundeck"
 )
 
-func TestInfo(t *testing.T) {
-	project := "TestProject"
+const (
+	projectName = "TestProject"
+)
 
+func TestInfo(t *testing.T) {
 	client := rundeck.NewClient(nil)
 
 	client.Projects().Create(&rundeck.CreateProjectInput{
 		Name: "project",
 	})
 
-	info, err := client.Projects().GetInfo(project)
+	info, err := client.Projects().GetInfo(projectName)
 	if err != nil {
 		t.Error(err)
 	}
 
-	if info.Name != project {
+	if info.Name != projectName {
 		t.Errorf("somehow the project's name changed...")
 	}
 
-	client.Projects().Delete(project)
+	client.Projects().Delete(projectName)
 }
