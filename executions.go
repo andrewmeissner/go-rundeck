@@ -9,15 +9,33 @@ import (
 )
 
 const (
-	ExecutionStatusRunning         = "running"
-	ExecutionStatusSucceeded       = "succeeded"
-	ExecutionStatusFailed          = "failed"
-	ExecutionStatusAborted         = "aborted"
-	ExecutionStatusTimedout        = "timedout"
-	ExecutionStatusFailedWithRetry = "failed-with-retry"
-	ExecutionStatusScheduled       = "scheduled"
-	ExecutionStatusOther           = "other"
+	ExecutionStatusRunning         ExecutionStatus = "running"
+	ExecutionStatusSucceeded       ExecutionStatus = "succeeded"
+	ExecutionStatusFailed          ExecutionStatus = "failed"
+	ExecutionStatusAborted         ExecutionStatus = "aborted"
+	ExecutionStatusTimedout        ExecutionStatus = "timedout"
+	ExecutionStatusFailedWithRetry ExecutionStatus = "failed-with-retry"
+	ExecutionStatusScheduled       ExecutionStatus = "scheduled"
+	ExecutionStatusOther           ExecutionStatus = "other"
+	ExecutionTypeScheduled         ExecutionType   = "scheduled"
+	ExecutionTypeUser              ExecutionType   = "user"
+	ExecutionTypeUserScheduled     ExecutionType   = "user-scheduled"
 )
+
+const (
+	BooleanDefault Boolean = iota
+	BooleanFalse
+	BooleanTrue
+)
+
+// ExecutionStatus ensure a constant is used in parameters
+type ExecutionStatus string
+
+// ExecutionType ensure a constant is used in parameters
+type ExecutionType string
+
+// Boolean often times have more than 2 values
+type Boolean int
 
 // Execution is information regarding an execution
 type Execution struct {
@@ -62,6 +80,32 @@ type DeleteExecutionsResponse struct {
 	SuccessCount  int  `json:"successCount"`
 	AllSuccessful bool `json:"allsuccessful"`
 	RequestCount  int  `json:"requestCount"`
+}
+
+// ExecutionQueryInput are parameters to narrow down the result set of a query operation
+type ExecutionQueryInput struct {
+	PagingInfo
+	Status                ExecutionStatus
+	AbortedBy             string
+	User                  string
+	RecentFilter          string
+	OlderFilter           string
+	Begin                 *time.Time // unix ms
+	End                   *time.Time // unix ms
+	AdHoc                 Boolean
+	JobIDList             []string
+	ExcludeJobIDList      []string
+	JobList               []string
+	ExcludeJobList        []string
+	GroupPath             string
+	GroupPathExact        string
+	ExcludeGroupPath      string
+	ExcludeGroupPathExact string
+	JobName               string
+	ExcludeJobName        string
+	JobNameExact          string
+	ExcludeJobNameExact   string
+	ExecutionType         ExecutionType
 }
 
 // Executions is information pertaining to executions API endpoints
@@ -197,4 +241,137 @@ func (e *Executions) BulkDelete(ids []int) (*DeleteExecutionsResponse, error) {
 
 	var bulkResponse DeleteExecutionsResponse
 	return &bulkResponse, json.NewDecoder(res.Body).Decode(&bulkResponse)
+}
+
+// Query queries for executions based on job or execution details
+func (e *Executions) Query(project string, input *ExecutionQueryInput) (*ExecutionsResponse, error) {
+	rawURL := e.c.RundeckAddr + "/project/" + project + "/executions"
+
+	uri, err := url.Parse(rawURL)
+	if err != nil {
+		return nil, err
+	}
+
+	query := uri.Query()
+
+	if input != nil {
+		if input.AbortedBy != "" {
+			query.Add("abortedByFilter", input.AbortedBy)
+		}
+
+		if input.AdHoc == BooleanFalse {
+			query.Add("adhoc", "false")
+		} else if input.AdHoc == BooleanTrue {
+			query.Add("adhoc", "true")
+		}
+
+		if input.Begin != nil {
+			query.Add("begin", strconv.FormatInt(input.Begin.Unix(), 10))
+		}
+
+		if input.End != nil {
+			query.Add("end", strconv.FormatInt(input.End.Unix(), 10))
+		}
+
+		if input.ExcludeGroupPath != "" {
+			query.Add("excludeGroupPath", input.ExcludeGroupPath)
+		}
+
+		if input.ExcludeGroupPathExact != "" {
+			query.Add("excludeGroupPathExact", input.ExcludeGroupPathExact)
+		}
+
+		if input.ExcludeJobList != nil && len(input.ExcludeJobList) > 0 {
+			for i := range input.ExcludeJobList {
+				query.Add("excludeJobListFilter", input.ExcludeJobList[i])
+			}
+		}
+
+		if input.ExcludeJobIDList != nil && len(input.ExcludeJobIDList) > 0 {
+			for i := range input.ExcludeJobIDList {
+				query.Add("excludeJobIdListFilter", input.ExcludeJobIDList[i])
+			}
+		}
+
+		if input.ExcludeJobList != nil && len(input.ExcludeJobList) > 0 {
+			for i := range input.ExcludeJobList {
+				query.Add("excludeJobListFilter", input.ExcludeJobList[i])
+			}
+		}
+
+		if input.ExcludeJobName != "" {
+			query.Add("excludeJobFilter", input.ExcludeJobName)
+		}
+
+		if input.ExcludeJobNameExact != "" {
+			query.Add("excludeJobExactFilter", input.ExcludeJobNameExact)
+		}
+
+		if input.ExecutionType != "" {
+			query.Add("executionTypeFilter", string(input.ExecutionType))
+		}
+
+		if input.GroupPath != "" {
+			query.Add("groupPath", input.GroupPath)
+		}
+
+		if input.GroupPathExact != "" {
+			query.Add("groupPathExact", input.GroupPathExact)
+		}
+
+		if input.JobIDList != nil && len(input.JobIDList) > 0 {
+			for i := range input.JobIDList {
+				query.Add("jobIdListFilter", input.JobIDList[i])
+			}
+		}
+
+		if input.JobList != nil && len(input.JobList) > 0 {
+			for i := range input.JobList {
+				query.Add("jobListFilter", input.JobList[i])
+			}
+		}
+
+		if input.JobName != "" {
+			query.Add("jobFilter", input.JobName)
+		}
+
+		if input.JobNameExact != "" {
+			query.Add("jobExactFilter", input.JobNameExact)
+		}
+
+		if input.Max != 0 {
+			query.Add("max", strconv.FormatInt(int64(input.Max), 10))
+		}
+
+		if input.Offset != 0 {
+			query.Add("offset", strconv.FormatInt(int64(input.Offset), 10))
+		}
+
+		if input.OlderFilter != "" {
+			query.Add("olderFilter", input.OlderFilter)
+		}
+
+		if input.RecentFilter != "" {
+			query.Add("recentFilter", input.RecentFilter)
+		}
+
+		if input.Status != "" {
+			query.Add("statusFilter", string(input.Status))
+		}
+
+		if input.User != "" {
+			query.Add("userFilter", input.User)
+		}
+	}
+
+	uri.RawQuery = query.Encode()
+
+	res, err := e.c.checkResponseOK(e.c.get(uri.String()))
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	var executions ExecutionsResponse
+	return &executions, json.NewDecoder(res.Body).Decode(&executions)
 }
