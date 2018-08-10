@@ -2,7 +2,6 @@ package rundeck
 
 import (
 	"encoding/json"
-	"net/http"
 	"net/url"
 	"strconv"
 	"time"
@@ -101,15 +100,11 @@ func (e *Executions) GetExecutionsForAJob(id string, status *string, paging *Pag
 
 	uri.RawQuery = query.Encode()
 
-	res, err := e.c.get(uri.String())
+	res, err := e.c.checkResponseOK(e.c.get(uri.String()))
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		return nil, makeError(res.Body)
-	}
 
 	var executions ExecutionsResponse
 	return &executions, json.NewDecoder(res.Body).Decode(&executions)
@@ -119,15 +114,11 @@ func (e *Executions) GetExecutionsForAJob(id string, status *string, paging *Pag
 func (e *Executions) DeleteExecutions(id string) (*DeleteExecutionsResponse, error) {
 	rawURL := e.c.RundeckAddr + "/job/" + id + "/executions"
 
-	res, err := e.c.delete(rawURL, nil)
+	res, err := e.c.checkResponseOK(e.c.delete(rawURL, nil))
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		return nil, makeError(res.Body)
-	}
 
 	var response DeleteExecutionsResponse
 	return &response, json.NewDecoder(res.Body).Decode(&response)
@@ -137,15 +128,11 @@ func (e *Executions) DeleteExecutions(id string) (*DeleteExecutionsResponse, err
 func (e *Executions) ListRunningExecutions(project string) (*ExecutionsResponse, error) {
 	rawURL := e.c.RundeckAddr + "/project/" + project + "/executions/running"
 
-	res, err := e.c.get(rawURL)
+	res, err := e.c.checkResponseOK(e.c.get(rawURL))
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		return nil, makeError(res.Body)
-	}
 
 	var executions ExecutionsResponse
 	return &executions, json.NewDecoder(res.Body).Decode(&executions)
@@ -155,10 +142,11 @@ func (e *Executions) ListRunningExecutions(project string) (*ExecutionsResponse,
 func (e *Executions) Info(id int) (*Execution, error) {
 	rawURL := e.c.RundeckAddr + "/exeuction/" + strconv.FormatInt(int64(id), 10)
 
-	res, err := checkResponseOK(e.c.get(rawURL))
+	res, err := e.c.checkResponseOK(e.c.get(rawURL))
 	if err != nil {
 		return nil, err
 	}
+	defer res.Body.Close()
 
 	var execution Execution
 	return &execution, json.NewDecoder(res.Body).Decode(&execution)
@@ -168,10 +156,11 @@ func (e *Executions) Info(id int) (*Execution, error) {
 func (e *Executions) ListInputFiles(id int) (*UploadedFilesResponse, error) {
 	rawURL := e.c.RundeckAddr + "/execution/" + strconv.FormatInt(int64(id), 10) + "/input/files"
 
-	res, err := checkResponseOK(e.c.get(rawURL))
+	res, err := e.c.checkResponseOK(e.c.get(rawURL))
 	if err != nil {
 		return nil, err
 	}
+	defer res.Body.Close()
 
 	var files UploadedFilesResponse
 	return &files, json.NewDecoder(res.Body).Decode(&files)

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"net/http"
 )
 
 // UserProfile is the information relating to a user on Rundeck
@@ -37,15 +36,11 @@ func (c *Client) Users() *Users {
 func (u *Users) List() ([]*UserProfile, error) {
 	url := u.c.RundeckAddr + "/user/list"
 
-	res, err := u.c.get(url)
+	res, err := u.c.checkResponseOK(u.c.get(url))
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		return nil, makeError(res.Body)
-	}
 
 	var users []*UserProfile
 	return users, json.NewDecoder(res.Body).Decode(&users)
@@ -62,15 +57,11 @@ func (u *Users) Get(login *string) (*UserProfile, error) {
 		url += "/" + stringValue(login)
 	}
 
-	res, err := u.c.get(url)
+	res, err := u.c.checkResponseOK(u.c.get(url))
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		return nil, makeError(res.Body)
-	}
 
 	var user UserProfile
 	return &user, json.NewDecoder(res.Body).Decode(&user)
@@ -100,15 +91,11 @@ func (u *Users) Modify(login *string, input *ModifyUserInput) (*UserProfile, err
 		body = bytes.NewReader(bs)
 	}
 
-	res, err := u.c.post(url, body)
+	res, err := u.c.checkResponseOK(u.c.post(url, body))
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		return nil, makeError(res.Body)
-	}
 
 	var userProfile UserProfile
 	return &userProfile, json.NewDecoder(res.Body).Decode(&userProfile)

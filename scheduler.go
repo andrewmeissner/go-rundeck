@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"net/http"
 )
 
 // TakeoverScheduleInput is the payload to takeover jobs in cluster mode
@@ -80,15 +79,11 @@ func (cs *ClusterScheduler) TakeoverSchedule(input *TakeoverScheduleInput) (*Tak
 		return nil, err
 	}
 
-	res, err := cs.c.put(url, bytes.NewReader(bs))
+	res, err := cs.c.checkResponseOK(cs.c.put(url, bytes.NewReader(bs)))
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		return nil, makeError(res.Body)
-	}
 
 	var takeover TakeoverScheduleResponse
 	return &takeover, json.NewDecoder(res.Body).Decode(&takeover)
@@ -105,15 +100,11 @@ func (cs *ClusterScheduler) ListScheduledJobs(uuid *string) ([]*Job, error) {
 
 	url += "/jobs"
 
-	res, err := cs.c.get(url)
+	res, err := cs.c.checkResponseOK(cs.c.get(url))
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		return nil, makeError(res.Body)
-	}
 
 	var jobs []*Job
 	return jobs, json.NewDecoder(res.Body).Decode(&jobs)

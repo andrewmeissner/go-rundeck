@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"net/http"
 )
 
 // Project is metadata about a project in rundeck
@@ -40,7 +39,7 @@ func (c *Client) Projects() *Projects {
 func (p *Projects) List() ([]*Project, error) {
 	rawURL := p.c.RundeckAddr + "/projects"
 
-	res, err := p.c.get(rawURL)
+	res, err := p.c.checkResponseOK(p.c.get(rawURL))
 	if err != nil {
 		return nil, err
 	}
@@ -63,15 +62,11 @@ func (p *Projects) Create(data *CreateProjectInput) (*ProjectInfo, error) {
 		return nil, err
 	}
 
-	res, err := p.c.post(rawURL, bytes.NewReader(bs))
+	res, err := p.c.checkResponseCreated(p.c.post(rawURL, bytes.NewReader(bs)))
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusCreated {
-		return nil, makeError(res.Body)
-	}
 
 	var info ProjectInfo
 	return &info, json.NewDecoder(res.Body).Decode(&info)
@@ -81,7 +76,7 @@ func (p *Projects) Create(data *CreateProjectInput) (*ProjectInfo, error) {
 func (p *Projects) GetInfo(project string) (*ProjectInfo, error) {
 	rawURL := p.c.RundeckAddr + "/project/" + project
 
-	res, err := p.c.get(rawURL)
+	res, err := p.c.checkResponseOK(p.c.get(rawURL))
 	if err != nil {
 		return nil, err
 	}
@@ -95,15 +90,11 @@ func (p *Projects) GetInfo(project string) (*ProjectInfo, error) {
 func (p *Projects) Delete(project string) error {
 	rawURL := p.c.RundeckAddr + "/project/" + project
 
-	res, err := p.c.delete(rawURL, nil)
+	res, err := p.c.checkResponseNoContent(p.c.delete(rawURL, nil))
 	if err != nil {
 		return err
 	}
 	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusNoContent {
-		return makeError(res.Body)
-	}
 
 	return nil
 }

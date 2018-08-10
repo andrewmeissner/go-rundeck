@@ -2,7 +2,6 @@ package rundeck
 
 import (
 	"encoding/json"
-	"net/http"
 )
 
 // LogStore contains information about logstorage in the system API
@@ -19,15 +18,11 @@ func (c *Client) LogStore() *LogStore {
 func (l *LogStore) LogStorage() (*LogStorageStats, error) {
 	url := l.c.RundeckAddr + "/system/logstorage"
 
-	res, err := l.c.get(url)
+	res, err := l.c.checkResponseOK(l.c.get(url))
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		return nil, makeError(res.Body)
-	}
 
 	var logStorage LogStorageStats
 	return &logStorage, json.NewDecoder(res.Body).Decode(&logStorage)
@@ -37,15 +32,11 @@ func (l *LogStore) LogStorage() (*LogStorageStats, error) {
 func (l *LogStore) IncompleteLogStorage() (*IncompleteLogStorageResponse, error) {
 	url := l.c.RundeckAddr + "/system/logstorage/incomplete"
 
-	res, err := l.c.get(url)
+	res, err := l.c.checkResponseOK(l.c.get(url))
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		return nil, makeError(res.Body)
-	}
 
 	var incompleteLogStorageResponse IncompleteLogStorageResponse
 	return &incompleteLogStorageResponse, json.NewDecoder(res.Body).Decode(&incompleteLogStorageResponse)
@@ -55,15 +46,11 @@ func (l *LogStore) IncompleteLogStorage() (*IncompleteLogStorageResponse, error)
 func (l *LogStore) ResumeIncompleteLogStorage() (*ResumedIncompleteLogStorageResponse, error) {
 	url := l.c.RundeckAddr + "/system/logstorage/incomplete/resume"
 
-	res, err := l.c.post(url, nil)
+	res, err := l.c.checkResponseOK(l.c.post(url, nil))
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		return nil, makeError(res.Body)
-	}
 
 	var resumed ResumedIncompleteLogStorageResponse
 	return &resumed, json.NewDecoder(res.Body).Decode(&resumed)

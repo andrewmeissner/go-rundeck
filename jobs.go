@@ -7,7 +7,6 @@ import (
 	"io"
 	"io/ioutil"
 	"math"
-	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
@@ -184,15 +183,11 @@ func (j *Jobs) List(project string, input *ListJobsInput) ([]*Job, error) {
 		return nil, err
 	}
 
-	res, err := j.c.get(uri)
+	res, err := j.c.checkResponseOK(j.c.get(uri))
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		return nil, makeError(res.Body)
-	}
 
 	var jobs []*Job
 	return jobs, json.NewDecoder(res.Body).Decode(&jobs)
@@ -211,15 +206,11 @@ func (j *Jobs) Run(jobID string, input *RunJobInput) (*Execution, error) {
 		body = bytes.NewReader(bs)
 	}
 
-	res, err := j.c.post(uri, body)
+	res, err := j.c.checkResponseOK(j.c.post(uri, body))
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		return nil, makeError(res.Body)
-	}
 
 	var execution Execution
 	return &execution, json.NewDecoder(res.Body).Decode(&execution)
@@ -238,15 +229,11 @@ func (j *Jobs) Retry(jobID string, execID int64, input *RetryJobInput) (*Executi
 		body = bytes.NewReader(bs)
 	}
 
-	res, err := j.c.post(uri, body)
+	res, err := j.c.checkResponseOK(j.c.post(uri, body))
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		return nil, makeError(res.Body)
-	}
 
 	var execution Execution
 	return &execution, json.NewDecoder(res.Body).Decode(&execution)
@@ -287,15 +274,11 @@ func (j *Jobs) Export(project string, input *ExportJobsInput) ([]byte, error) {
 
 	uri.RawQuery = query.Encode()
 
-	res, err := j.c.get(uri.String())
+	res, err := j.c.checkResponseOK(j.c.get(uri.String()))
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		return nil, makeError(res.Body)
-	}
 
 	return ioutil.ReadAll(res.Body)
 }
@@ -330,15 +313,11 @@ func (j *Jobs) Import(project string, input *ImportJobsInput) (*ImportJobsRespon
 
 	uri.RawQuery = query.Encode()
 
-	res, err := j.c.post(uri.String(), bytes.NewReader(input.RawContent))
+	res, err := j.c.checkResponseOK(j.c.post(uri.String(), bytes.NewReader(input.RawContent)))
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		return nil, makeError(res.Body)
-	}
 
 	var resp ImportJobsResponse
 	return &resp, json.NewDecoder(res.Body).Decode(&resp)
@@ -362,15 +341,11 @@ func (j *Jobs) GetDefinition(id string, format *string) ([]byte, error) {
 	query.Add("format", returnFormat)
 	uri.RawQuery = query.Encode()
 
-	res, err := j.c.get(uri.String())
+	res, err := j.c.checkResponseOK(j.c.get(uri.String()))
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		return nil, makeError(res.Body)
-	}
 
 	return ioutil.ReadAll(res.Body)
 }
@@ -379,15 +354,11 @@ func (j *Jobs) GetDefinition(id string, format *string) ([]byte, error) {
 func (j *Jobs) DeleteDefinition(id string) error {
 	rawURL := j.c.RundeckAddr + "/job/" + id
 
-	res, err := j.c.delete(rawURL, nil)
+	res, err := j.c.checkResponseNoContent(j.c.delete(rawURL, nil))
 	if err != nil {
 		return err
 	}
 	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusNoContent {
-		return makeError(res.Body)
-	}
 
 	return nil
 }
@@ -405,14 +376,9 @@ func (j *Jobs) BulkDelete(input *BulkModifyInput) (*BulkModifyResponse, error) {
 		return nil, err
 	}
 
-	res, err := j.c.delete(rawURL, bytes.NewReader(bs))
+	res, err := j.c.checkResponseOK(j.c.delete(rawURL, bytes.NewReader(bs)))
 	if err != nil {
 		return nil, err
-	}
-	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		return nil, makeError(res.Body)
 	}
 
 	var response BulkModifyResponse
@@ -433,15 +399,11 @@ func (j *Jobs) ToggleExecutionsOrSchedules(id string, enabled bool, toggleKind s
 		rawURL += "/disable"
 	}
 
-	res, err := j.c.post(rawURL, nil)
+	res, err := j.c.checkResponseOK(j.c.post(rawURL, nil))
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		return nil, makeError(res.Body)
-	}
 
 	var success SuccessResponse
 	return &success, json.NewDecoder(res.Body).Decode(&success)
@@ -465,15 +427,11 @@ func (j *Jobs) BulkToggleExecutionsOrSchedules(input *BulkModifyInput, enabled b
 		rawURL += "/disable"
 	}
 
-	res, err := j.c.post(rawURL, nil)
+	res, err := j.c.checkResponseOK(j.c.post(rawURL, nil))
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		return nil, makeError(res.Body)
-	}
 
 	var bulk BulkModifyResponse
 	return &bulk, json.NewDecoder(res.Body).Decode(&bulk)
@@ -483,15 +441,11 @@ func (j *Jobs) BulkToggleExecutionsOrSchedules(input *BulkModifyInput, enabled b
 func (j *Jobs) GetMetadata(id string) (*Job, error) {
 	rawURL := j.c.RundeckAddr + "/job/" + id + "/info"
 
-	res, err := j.c.get(rawURL)
+	res, err := j.c.checkResponseOK(j.c.get(rawURL))
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		return nil, makeError(res.Body)
-	}
 
 	var job Job
 	return &job, json.NewDecoder(res.Body).Decode(&job)
@@ -517,15 +471,11 @@ func (j *Jobs) UploadFileForJobOption(id, optionName string, content []byte, fil
 		"Content-Type": "application/octet-stream",
 	}
 
-	res, err := j.c.postWithAdditionalHeaders(uri.String(), headers, bytes.NewReader(content))
+	res, err := j.c.checkResponseOK(j.c.postWithAdditionalHeaders(uri.String(), headers, bytes.NewReader(content)))
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		return nil, makeError(res.Body)
-	}
 
 	var uploadResponse UploadFileResponse
 	return &uploadResponse, json.NewDecoder(res.Body).Decode(&uploadResponse)
@@ -549,15 +499,11 @@ func (j *Jobs) ListFilesUploadedForJob(id string, fileState *string, max *int) (
 	}
 	uri.RawQuery = query.Encode()
 
-	res, err := j.c.get(uri.String())
+	res, err := j.c.checkResponseOK(j.c.get(uri.String()))
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		return nil, makeError(res.Body)
-	}
 
 	var files UploadedFilesResponse
 	return &files, json.NewDecoder(res.Body).Decode(&files)
@@ -567,15 +513,20 @@ func (j *Jobs) ListFilesUploadedForJob(id string, fileState *string, max *int) (
 func (j *Jobs) FileInfo(id string) (*FileOption, error) {
 	rawURL := j.c.RundeckAddr + "/jobs/file/" + id
 
-	res, err := j.c.get(rawURL)
+	// res, err := j.c.get(rawURL)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// defer res.Body.Close()
+
+	// if res.StatusCode != http.StatusOK {
+	// 	return nil, makeError(res.Body)
+	// }
+	res, err := j.c.checkResponseOK(j.c.get(rawURL))
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		return nil, makeError(res.Body)
-	}
 
 	var info FileOption
 	return &info, json.NewDecoder(res.Body).Decode(&info)

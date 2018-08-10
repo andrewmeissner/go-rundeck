@@ -3,7 +3,6 @@ package rundeck
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"time"
 )
 
@@ -178,15 +177,11 @@ func (c *Client) System() *System {
 func (s *System) Info() (*SystemInfoResponse, error) {
 	url := s.c.RundeckAddr + "/system/info"
 
-	res, err := s.c.get(url)
+	res, err := s.c.checkResponseOK(s.c.get(url))
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		return nil, makeError(res.Body)
-	}
 
 	var systemInfo SystemInfoResponse
 	return &systemInfo, json.NewDecoder(res.Body).Decode(&systemInfo)
@@ -207,15 +202,11 @@ func (s *System) SetExecutionMode(mode string) (*ExecutionMode, error) {
 
 	url += "/" + enabledDisabled
 
-	res, err := s.c.post(url, nil)
+	res, err := s.c.checkResponseOK(s.c.post(url, nil))
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		return nil, makeError(res.Body)
-	}
 
 	var executionMode ExecutionMode
 	err = json.NewDecoder(res.Body).Decode(&executionMode)

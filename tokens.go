@@ -3,7 +3,6 @@ package rundeck
 import (
 	"bytes"
 	"encoding/json"
-	"net/http"
 	"time"
 )
 
@@ -31,15 +30,11 @@ func (c *Client) Tokens() *Tokens {
 func (t *Tokens) List() ([]*Token, error) {
 	url := t.c.RundeckAddr + "/tokens"
 
-	res, err := t.c.get(url)
+	res, err := t.c.checkResponseOK(t.c.get(url))
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		return nil, makeError(res.Body)
-	}
 
 	var tokenList []*Token
 	return tokenList, json.NewDecoder(res.Body).Decode(&tokenList)
@@ -49,15 +44,11 @@ func (t *Tokens) List() ([]*Token, error) {
 func (t *Tokens) User(user string) ([]*Token, error) {
 	url := t.c.RundeckAddr + "/tokens/" + user
 
-	res, err := t.c.get(url)
+	res, err := t.c.checkResponseOK(t.c.get(url))
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		return nil, makeError(res.Body)
-	}
 
 	var tokenList []*Token
 	return tokenList, json.NewDecoder(res.Body).Decode(&tokenList)
@@ -67,15 +58,11 @@ func (t *Tokens) User(user string) ([]*Token, error) {
 func (t *Tokens) Get(id string) (*Token, error) {
 	url := t.c.RundeckAddr + "/token/" + id
 
-	res, err := t.c.get(url)
+	res, err := t.c.checkResponseOK(t.c.get(url))
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		return nil, makeError(res.Body)
-	}
 
 	var token Token
 	return &token, json.NewDecoder(res.Body).Decode(&token)
@@ -104,15 +91,11 @@ func (t *Tokens) Create(user string, roles []string, duration *string) (*Token, 
 		return nil, err
 	}
 
-	res, err := t.c.post(url, bytes.NewReader(bs))
+	res, err := t.c.checkResponseCreated(t.c.post(url, bytes.NewReader(bs)))
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusCreated {
-		return nil, makeError(res.Body)
-	}
 
 	var token Token
 	return &token, json.NewDecoder(res.Body).Decode(&token)
@@ -122,15 +105,11 @@ func (t *Tokens) Create(user string, roles []string, duration *string) (*Token, 
 func (t *Tokens) Delete(id string) error {
 	url := t.c.RundeckAddr + "/token/" + id
 
-	res, err := t.c.delete(url, nil)
+	res, err := t.c.checkResponseNoContent(t.c.delete(url, nil))
 	if err != nil {
 		return err
 	}
 	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusNoContent {
-		return makeError(res.Body)
-	}
 
 	return nil
 }

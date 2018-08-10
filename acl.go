@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"io/ioutil"
-	"net/http"
 	"strings"
 )
 
@@ -42,15 +41,11 @@ func (c *Client) ACL() *ACL {
 func (a *ACL) List() (*ListACLsResponse, error) {
 	url := a.c.RundeckAddr + "/system/acl/"
 
-	res, err := a.c.get(url)
+	res, err := a.c.checkResponseOK(a.c.get(url))
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		return nil, makeError(res.Body)
-	}
 
 	var listACLs ListACLsResponse
 	return &listACLs, json.NewDecoder(res.Body).Decode(&listACLs)
@@ -60,15 +55,11 @@ func (a *ACL) List() (*ListACLsResponse, error) {
 func (a *ACL) Get(name string) ([]byte, error) {
 	url := a.c.RundeckAddr + "/system/acl/" + a.sanitizeACLName(name)
 
-	res, err := a.c.getWithAdditionalHeaders(url, map[string]string{"Accept": "text/plain"})
+	res, err := a.c.checkResponseOK(a.c.getWithAdditionalHeaders(url, map[string]string{"Accept": "text/plain"}))
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		return nil, makeError(res.Body)
-	}
 
 	return ioutil.ReadAll(res.Body)
 }
@@ -77,15 +68,11 @@ func (a *ACL) Get(name string) ([]byte, error) {
 func (a *ACL) Create(name string, policy []byte) error {
 	url := a.c.RundeckAddr + "/system/acl/" + a.sanitizeACLName(name)
 
-	res, err := a.c.postWithAdditionalHeaders(url, map[string]string{"Content-Type": "text/plain"}, bytes.NewReader(policy))
+	res, err := a.c.checkResponseCreated(a.c.postWithAdditionalHeaders(url, map[string]string{"Content-Type": "text/plain"}, bytes.NewReader(policy)))
 	if err != nil {
 		return err
 	}
 	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusCreated {
-		return makeError(res.Body)
-	}
 
 	return nil
 }
@@ -94,15 +81,11 @@ func (a *ACL) Create(name string, policy []byte) error {
 func (a *ACL) Update(name string, policy []byte) error {
 	url := a.c.RundeckAddr + "/system/acl/" + a.sanitizeACLName(name)
 
-	res, err := a.c.putWithAdditionalHeaders(url, map[string]string{"Content-Type": "text/plain"}, bytes.NewReader(policy))
+	res, err := a.c.checkResponseOK(a.c.putWithAdditionalHeaders(url, map[string]string{"Content-Type": "text/plain"}, bytes.NewReader(policy)))
 	if err != nil {
 		return err
 	}
 	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		return makeError(res.Body)
-	}
 
 	return nil
 }
@@ -111,15 +94,11 @@ func (a *ACL) Update(name string, policy []byte) error {
 func (a *ACL) Delete(name string) error {
 	url := a.c.RundeckAddr + "/system/acl/" + a.sanitizeACLName(name)
 
-	res, err := a.c.delete(url, nil)
+	res, err := a.c.checkResponseNoContent(a.c.delete(url, nil))
 	if err != nil {
 		return err
 	}
 	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusNoContent {
-		return makeError(res.Body)
-	}
 
 	return nil
 }

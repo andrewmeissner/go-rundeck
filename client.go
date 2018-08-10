@@ -139,3 +139,25 @@ func (c *Client) convertFiltersToSerializeableFormat(filters map[string]string) 
 	}
 	return strings.Join(fs, " ")
 }
+
+func (c *Client) checkResponseOK(res *http.Response, err error) (*http.Response, error) {
+	return c.checkResponse(res, http.StatusOK, err)
+}
+
+func (c *Client) checkResponseCreated(res *http.Response, err error) (*http.Response, error) {
+	return c.checkResponse(res, http.StatusCreated, err)
+}
+
+func (c *Client) checkResponseNoContent(res *http.Response, err error) (*http.Response, error) {
+	return c.checkResponse(res, http.StatusNoContent, err)
+}
+
+func (c *Client) checkResponse(res *http.Response, statusCode int, err error) (*http.Response, error) {
+	if err != nil {
+		return nil, err
+	}
+	if res.StatusCode != statusCode {
+		return nil, makeError(res.Body)
+	}
+	return res, nil
+}
