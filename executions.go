@@ -132,3 +132,21 @@ func (e *Executions) DeleteExecutions(id string) (*DeleteExecutionsResponse, err
 	var response DeleteExecutionsResponse
 	return &response, json.NewDecoder(res.Body).Decode(&response)
 }
+
+// ListRunningExecutions returns running exeuctions for the specified project ("*" for all projects)
+func (e *Executions) ListRunningExecutions(project string) (*ExecutionsResponse, error) {
+	rawURL := e.c.RundeckAddr + "/project/" + project + "/executions/running"
+
+	res, err := e.c.get(rawURL)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		return nil, makeError(res.Body)
+	}
+
+	var executions ExecutionsResponse
+	return &executions, json.NewDecoder(res.Body).Decode(&executions)
+}
