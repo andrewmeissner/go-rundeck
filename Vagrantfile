@@ -18,7 +18,7 @@ Vagrant.configure("2") do |config|
         end
     end
 
-    rundeck_versions = ["2.11.5", "2.11.5"]
+    rundeck_versions = ["3.0.1", "2.11.5"]
 
     (1..rundeck_versions.length).each do |i|
         config.vm.define "rundeck-#{i}" do |rundeck|
