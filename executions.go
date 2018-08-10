@@ -1,6 +1,7 @@
 package rundeck
 
 import (
+	"bytes"
 	"encoding/json"
 	"net/url"
 	"strconv"
@@ -164,4 +165,36 @@ func (e *Executions) ListInputFiles(id int) (*UploadedFilesResponse, error) {
 
 	var files UploadedFilesResponse
 	return &files, json.NewDecoder(res.Body).Decode(&files)
+}
+
+// Delete deletes an execution by id
+func (e *Executions) Delete(id int) error {
+	rawURL := e.c.RundeckAddr + "/execution/" + strconv.FormatInt(int64(id), 10)
+
+	res, err := e.c.checkResponseNoContent(e.c.delete(rawURL, nil))
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	return nil
+}
+
+// BulkDelete deletes a set of executions by their ids
+func (e *Executions) BulkDelete(ids []int) (*DeleteExecutionsResponse, error) {
+	rawURL := e.c.RundeckAddr + "/executions/delete"
+
+	bs, err := json.Marshal(ids)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := e.c.checkResponseOK(e.c.delete(rawURL, bytes.NewReader(bs)))
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	var bulkResponse DeleteExecutionsResponse
+	return &bulkResponse, json.NewDecoder(res.Body).Decode(&bulkResponse)
 }
