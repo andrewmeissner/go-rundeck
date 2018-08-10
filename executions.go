@@ -150,3 +150,29 @@ func (e *Executions) ListRunningExecutions(project string) (*ExecutionsResponse,
 	var executions ExecutionsResponse
 	return &executions, json.NewDecoder(res.Body).Decode(&executions)
 }
+
+// Info returns information about the specific execution
+func (e *Executions) Info(id int) (*Execution, error) {
+	rawURL := e.c.RundeckAddr + "/exeuction/" + strconv.FormatInt(int64(id), 10)
+
+	res, err := checkResponseOK(e.c.get(rawURL))
+	if err != nil {
+		return nil, err
+	}
+
+	var execution Execution
+	return &execution, json.NewDecoder(res.Body).Decode(&execution)
+}
+
+// ListInputFiles lists input ifle sused for an execution
+func (e *Executions) ListInputFiles(id int) (*UploadedFilesResponse, error) {
+	rawURL := e.c.RundeckAddr + "/execution/" + strconv.FormatInt(int64(id), 10) + "/input/files"
+
+	res, err := checkResponseOK(e.c.get(rawURL))
+	if err != nil {
+		return nil, err
+	}
+
+	var files UploadedFilesResponse
+	return &files, json.NewDecoder(res.Body).Decode(&files)
+}

@@ -5,10 +5,10 @@ Vagrant.configure("2") do |config|
 
     ENV["VAGRANT_NO_PARALLEL"] = "true"
 
-    config.vm.define "postgres" do |postgres|
+    config.vm.define "postgres-rundeck" do |postgres|
         postgres.vm.provider "docker" do |d|
             d.image = "postgres:10.4-alpine"
-            d.name = "postgres"
+            d.name = "postgres-rundeck"
             d.ports = ["5432:5432"]
             d.env = {
                 "POSTGRES_PASSWORD": "rundeckpassword",
@@ -36,7 +36,7 @@ Vagrant.configure("2") do |config|
                     "RUNDECK_PROJECT_STORAGE_TYPE": "db",
                     "NO_LOCAL_MYSQL": "true"
                 }
-                d.link("postgres:postgres")
+                d.link("postgres-rundeck:postgres")
             end
         end
     end    
