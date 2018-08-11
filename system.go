@@ -6,9 +6,12 @@ import (
 	"time"
 )
 
+// ExecutionMode informs the whether or not rundeck can execute jobs
+type ExecutionMode string
+
 const (
-	ExecutionModeActive  = "active"
-	ExecutionModePassive = "passive"
+	ExecutionModeActive  ExecutionMode = "active"
+	ExecutionModePassive ExecutionMode = "passive"
 )
 
 // SystemInfoResponse is Rundeck server information and stats
@@ -45,10 +48,10 @@ type Rundeck struct {
 	ServerUUID string `json:"serverUUID"`
 }
 
-// ExecutionMode is information about the rundeck server's ability to execute jobs
-type ExecutionMode struct {
-	Active        bool   `json:"active"`
-	ExecutionMode string `json:"executionMode"`
+// ExecutionModeResponse is information about the rundeck server's ability to execute jobs
+type ExecutionModeResponse struct {
+	Active        bool          `json:"active"`
+	ExecutionMode ExecutionMode `json:"executionMode"`
 }
 
 // OperatingSystem is information regarding the Rundeck host
@@ -188,7 +191,7 @@ func (s *System) Info() (*SystemInfoResponse, error) {
 }
 
 // SetExecutionMode sets the execution mode
-func (s *System) SetExecutionMode(mode string) (*ExecutionMode, error) {
+func (s *System) SetExecutionMode(mode ExecutionMode) (*ExecutionModeResponse, error) {
 	if mode != ExecutionModeActive && mode != ExecutionModePassive {
 		return nil, fmt.Errorf("received invalid execution mode %s - must be either \"%s\" or \"%s\"", mode, ExecutionModeActive, ExecutionModePassive)
 	}
@@ -208,7 +211,7 @@ func (s *System) SetExecutionMode(mode string) (*ExecutionMode, error) {
 	}
 	defer res.Body.Close()
 
-	var executionMode ExecutionMode
+	var executionMode ExecutionModeResponse
 	err = json.NewDecoder(res.Body).Decode(&executionMode)
 	if err != nil {
 		return nil, err

@@ -3,6 +3,7 @@ package rundeck
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -13,25 +14,58 @@ import (
 	"time"
 )
 
+// LogLevel pertains to job log levels
+type LogLevel string
+
 const (
-	JobLogLevelDebug      = "DEBUG"
-	JobLogLevelVerbose    = "VERBOSE"
-	JobLogLevelInfo       = "INFO"
-	JobLogLevelWarn       = "WARN"
-	JobLogLevelError      = "ERROR"
-	JobFormatXML          = "xml"
-	JobFormatYAML         = "yaml"
-	DuplicateOptionSkip   = "skip"
-	DuplicateOptionCreate = "create"
-	DuplicateoptionUpdate = "update"
-	UUIDOptionPreserve    = "preserve"
-	UUIDOptionRemove      = "remove"
-	ToggleKindExecution   = "execution"
-	ToggleKindSchedule    = "schedule"
-	FileStateTemp         = "temp"
-	FileStateDeleted      = "deleted"
-	FileStateExpired      = "expired"
-	FileStateRetained     = "retained"
+	JobLogLevelDebug   LogLevel = "DEBUG"
+	JobLogLevelVerbose LogLevel = "VERBOSE"
+	JobLogLevelInfo    LogLevel = "INFO"
+	JobLogLevelWarn    LogLevel = "WARN"
+	JobLogLevelError   LogLevel = "ERROR"
+)
+
+// JobFormat specifies the content type
+type JobFormat string
+
+const (
+	JobFormatXML  JobFormat = "xml"
+	JobFormatYAML JobFormat = "yaml"
+)
+
+// DuplicateOption instructs the job importer how to handle duplicate jobs
+type DuplicateOption string
+
+const (
+	DuplicateOptionSkip   DuplicateOption = "skip"
+	DuplicateOptionCreate DuplicateOption = "create"
+	DuplicateOptionUpdate DuplicateOption = "update"
+)
+
+// UUIDOption instructs the job importer how to handle duplicate job uuids
+type UUIDOption string
+
+const (
+	UUIDOptionPreserve UUIDOption = "preserve"
+	UUIDOptionRemove   UUIDOption = "remove"
+)
+
+// ToggleKind informs if executions or scheudles are being targeted
+type ToggleKind string
+
+const (
+	ToggleKindExecution ToggleKind = "execution"
+	ToggleKindSchedule  ToggleKind = "schedule"
+)
+
+// FileState informs the state of the uploaded file
+type FileState string
+
+const (
+	FileStateTemp     FileState = "temp"
+	FileStateDeleted  FileState = "deleted"
+	FileStateExpired  FileState = "expired"
+	FileStateRetained FileState = "retained"
 )
 
 // Job is information about a Rundeck job
@@ -67,7 +101,7 @@ type ListJobsInput struct {
 
 // RunJobInput are the optional paramenters passed when running a job
 type RunJobInput struct {
-	LogLevel  string
+	LogLevel  LogLevel
 	AsUser    string
 	Filters   map[string]string
 	RunAtTime time.Time
@@ -75,7 +109,7 @@ type RunJobInput struct {
 }
 
 type runJobInputSerializeable struct {
-	LogLevel  string            `json:"loglevel,omitempty"`
+	LogLevel  LogLevel          `json:"loglevel,omitempty"`
 	AsUser    string            `json:"asUser,omitempty"`
 	Filter    string            `json:"filter,omitempty"`
 	RunAtTime time.Time         `json:"runAtTime,omitempty"`
@@ -84,7 +118,7 @@ type runJobInputSerializeable struct {
 
 // RetryJobInput are the optional parameters passed when retrying a job based on execution id
 type RetryJobInput struct {
-	LogLevel    string            `json:"loglevel,omitempty"`
+	LogLevel    LogLevel          `json:"loglevel,omitempty"`
 	AsUser      string            `json:"asUser,omitempty"`
 	Options     map[string]string `json:"options,omitempty"`
 	FailedNodes bool              `json:"failedNodes,omitempty"`
@@ -92,7 +126,7 @@ type RetryJobInput struct {
 
 // ExportJobsInput are the optional parameters for the export endpoint
 type ExportJobsInput struct {
-	Format    string
+	Format    JobFormat
 	IDList    []string
 	GroupPath string
 	JobFilter string
@@ -100,9 +134,9 @@ type ExportJobsInput struct {
 
 // ImportJobsInput are the parameters for the import endpoint
 type ImportJobsInput struct {
-	FileFormat      string
-	DuplicateOption string
-	UUIDOption      string
+	FileFormat      JobFormat
+	DuplicateOption DuplicateOption
+	UUIDOption      UUIDOption
 	RawContent      []byte
 }
 
@@ -155,7 +189,7 @@ type UploadedFilesResponse struct {
 type FileOption struct {
 	ID             string    `json:"id"`
 	User           string    `json:"user"`
-	FileState      string    `json:"fileState"`
+	FileState      FileState `json:"fileState"`
 	SHA            string    `json:"sha"`
 	JobID          string    `json:"jobId"`
 	DateCreated    time.Time `json:"dateCreated"`
@@ -252,10 +286,10 @@ func (j *Jobs) Export(project string, input *ExportJobsInput) ([]byte, error) {
 
 	if input != nil {
 		format := JobFormatXML
-		if strings.ToLower(input.Format) == JobFormatYAML {
+		if input.Format == JobFormatYAML {
 			format = JobFormatYAML
 		}
-		query.Add("format", format)
+		query.Add("format", string(format))
 
 		if input.GroupPath != "" {
 			query.Add("groupPath", input.GroupPath)
@@ -269,7 +303,7 @@ func (j *Jobs) Export(project string, input *ExportJobsInput) ([]byte, error) {
 			query.Add("jobFilter", input.JobFilter)
 		}
 	} else {
-		query.Add("format", JobFormatXML)
+		query.Add("format", string(JobFormatXML))
 	}
 
 	uri.RawQuery = query.Encode()
@@ -298,17 +332,17 @@ func (j *Jobs) Import(project string, input *ImportJobsInput) (*ImportJobsRespon
 	query := uri.Query()
 
 	fileFormat := JobFormatXML
-	if strings.ToLower(input.FileFormat) == JobFormatYAML {
+	if input.FileFormat == JobFormatYAML {
 		fileFormat = JobFormatYAML
 	}
-	query.Add("fileformat", fileFormat)
+	query.Add("fileformat", string(fileFormat))
 
 	if input.DuplicateOption != "" {
-		query.Add("dupeOption", input.DuplicateOption)
+		query.Add("dupeOption", string(input.DuplicateOption))
 	}
 
 	if input.UUIDOption != "" {
-		query.Add("uuidOption", input.UUIDOption)
+		query.Add("uuidOption", string(input.UUIDOption))
 	}
 
 	uri.RawQuery = query.Encode()
@@ -324,11 +358,11 @@ func (j *Jobs) Import(project string, input *ImportJobsInput) (*ImportJobsRespon
 }
 
 // GetDefinition returns a job definition as a slice of bytces in either xml or yaml
-func (j *Jobs) GetDefinition(id string, format *string) ([]byte, error) {
+func (j *Jobs) GetDefinition(id string, format *JobFormat) ([]byte, error) {
 	rawURL := j.c.RundeckAddr + "/job/" + id
 
 	returnFormat := JobFormatXML
-	if strings.ToLower(stringValue(format)) == JobFormatYAML {
+	if format != nil && *format == JobFormatYAML {
 		returnFormat = JobFormatYAML
 	}
 
@@ -338,7 +372,7 @@ func (j *Jobs) GetDefinition(id string, format *string) ([]byte, error) {
 	}
 
 	query := uri.Query()
-	query.Add("format", returnFormat)
+	query.Add("format", string(returnFormat))
 	uri.RawQuery = query.Encode()
 
 	res, err := j.c.checkResponseOK(j.c.get(uri.String()))
@@ -386,12 +420,12 @@ func (j *Jobs) BulkDelete(input *BulkModifyInput) (*BulkModifyResponse, error) {
 }
 
 // ToggleExecutionsOrSchedules toggles the executions or schedules of the supplied job
-func (j *Jobs) ToggleExecutionsOrSchedules(id string, enabled bool, toggleKind string) (*SuccessResponse, error) {
+func (j *Jobs) ToggleExecutionsOrSchedules(id string, enabled bool, toggleKind ToggleKind) (*SuccessResponse, error) {
 	if toggleKind != ToggleKindExecution && toggleKind != ToggleKindSchedule {
-		return nil, fmt.Errorf(`toggleKind must be "execution" or "schedule"`)
+		return nil, errors.New(`toggleKind must be "execution" or "schedule"`)
 	}
 
-	rawURL := j.c.RundeckAddr + "/job/" + id + "/" + toggleKind
+	rawURL := j.c.RundeckAddr + "/job/" + id + "/" + string(toggleKind)
 
 	if enabled {
 		rawURL += "/enable"
@@ -410,16 +444,16 @@ func (j *Jobs) ToggleExecutionsOrSchedules(id string, enabled bool, toggleKind s
 }
 
 // BulkToggleExecutionsOrSchedules toggles the execution or scheudle value of the suppplied job ids
-func (j *Jobs) BulkToggleExecutionsOrSchedules(input *BulkModifyInput, enabled bool, toggleKind string) (*BulkModifyResponse, error) {
+func (j *Jobs) BulkToggleExecutionsOrSchedules(input *BulkModifyInput, enabled bool, toggleKind ToggleKind) (*BulkModifyResponse, error) {
 	if input == nil {
 		return nil, fmt.Errorf("input cannot be nil")
 	}
 
 	if toggleKind != ToggleKindExecution && toggleKind != ToggleKindSchedule {
-		return nil, fmt.Errorf(`toggleKind must be "execution" or "schedule"`)
+		return nil, errors.New(`toggleKind must be "execution" or "schedule"`)
 	}
 
-	rawURL := j.c.RundeckAddr + "/jobs/" + toggleKind
+	rawURL := j.c.RundeckAddr + "/jobs/" + string(toggleKind)
 
 	if enabled {
 		rawURL += "/enable"
@@ -482,7 +516,7 @@ func (j *Jobs) UploadFileForJobOption(id, optionName string, content []byte, fil
 }
 
 // ListFilesUploadedForJob returns files that were uploaded for a particular job
-func (j *Jobs) ListFilesUploadedForJob(id string, fileState *string, max *int) (*UploadedFilesResponse, error) {
+func (j *Jobs) ListFilesUploadedForJob(id string, fileState *FileState, max *int) (*UploadedFilesResponse, error) {
 	rawURL := j.c.RundeckAddr + "/job/" + id + "/input/files"
 
 	uri, err := url.Parse(rawURL)
@@ -492,7 +526,7 @@ func (j *Jobs) ListFilesUploadedForJob(id string, fileState *string, max *int) (
 
 	query := uri.Query()
 	if fileState != nil {
-		query.Add("fileState", stringValue(fileState))
+		query.Add("fileState", string(*fileState))
 	}
 	if max != nil {
 		query.Add("max", strconv.Itoa(math.MaxInt8))
