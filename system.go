@@ -6,13 +6,13 @@ import (
 	"time"
 )
 
-// ExecutionMode informs the whether or not rundeck can execute jobs
-type ExecutionMode string
-
 const (
 	ExecutionModeActive  ExecutionMode = "active"
 	ExecutionModePassive ExecutionMode = "passive"
 )
+
+// ExecutionMode informs the whether or not rundeck can execute jobs
+type ExecutionMode string
 
 // SystemInfoResponse is Rundeck server information and stats
 type SystemInfoResponse struct {

@@ -20,10 +20,7 @@ const (
 	ExecutionTypeScheduled         ExecutionType   = "scheduled"
 	ExecutionTypeUser              ExecutionType   = "user"
 	ExecutionTypeUserScheduled     ExecutionType   = "user-scheduled"
-)
-
-const (
-	BooleanDefault Boolean = iota
+	BooleanDefault                 Boolean         = iota
 	BooleanFalse
 	BooleanTrue
 )
