@@ -14,27 +14,6 @@ import (
 	"time"
 )
 
-const (
-	JobLogLevelDebug      LogLevel        = "DEBUG"
-	JobLogLevelVerbose    LogLevel        = "VERBOSE"
-	JobLogLevelInfo       LogLevel        = "INFO"
-	JobLogLevelWarn       LogLevel        = "WARN"
-	JobLogLevelError      LogLevel        = "ERROR"
-	JobFormatXML          JobFormat       = "xml"
-	JobFormatYAML         JobFormat       = "yaml"
-	DuplicateOptionSkip   DuplicateOption = "skip"
-	DuplicateOptionCreate DuplicateOption = "create"
-	DuplicateOptionUpdate DuplicateOption = "update"
-	UUIDOptionPreserve    UUIDOption      = "preserve"
-	UUIDOptionRemove      UUIDOption      = "remove"
-	ToggleKindExecution   ToggleKind      = "execution"
-	ToggleKindSchedule    ToggleKind      = "schedule"
-	FileStateTemp         FileState       = "temp"
-	FileStateDeleted      FileState       = "deleted"
-	FileStateExpired      FileState       = "expired"
-	FileStateRetained     FileState       = "retained"
-)
-
 // LogLevel pertains to job log levels
 type LogLevel string
 

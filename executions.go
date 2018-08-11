@@ -8,23 +8,6 @@ import (
 	"time"
 )
 
-const (
-	ExecutionStatusRunning         ExecutionStatus = "running"
-	ExecutionStatusSucceeded       ExecutionStatus = "succeeded"
-	ExecutionStatusFailed          ExecutionStatus = "failed"
-	ExecutionStatusAborted         ExecutionStatus = "aborted"
-	ExecutionStatusTimedout        ExecutionStatus = "timedout"
-	ExecutionStatusFailedWithRetry ExecutionStatus = "failed-with-retry"
-	ExecutionStatusScheduled       ExecutionStatus = "scheduled"
-	ExecutionStatusOther           ExecutionStatus = "other"
-	ExecutionTypeScheduled         ExecutionType   = "scheduled"
-	ExecutionTypeUser              ExecutionType   = "user"
-	ExecutionTypeUserScheduled     ExecutionType   = "user-scheduled"
-	BooleanDefault                 Boolean         = iota
-	BooleanFalse
-	BooleanTrue
-)
-
 // ExecutionStatus ensure a constant is used in parameters
 type ExecutionStatus string
 

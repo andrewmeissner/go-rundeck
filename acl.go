@@ -7,9 +7,7 @@ import (
 	"strings"
 )
 
-const (
-	aclPolicySuffix = ".aclpolicy"
-)
+const aclPolicySuffix = ".aclpolicy"
 
 // ListACLsResponse is the response body from the system/acl endpoint
 type ListACLsResponse struct {

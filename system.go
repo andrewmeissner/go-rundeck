@@ -6,11 +6,6 @@ import (
 	"time"
 )
 
-const (
-	ExecutionModeActive  ExecutionMode = "active"
-	ExecutionModePassive ExecutionMode = "passive"
-)
-
 // ExecutionMode informs the whether or not rundeck can execute jobs
 type ExecutionMode string
 
