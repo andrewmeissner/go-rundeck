@@ -17,20 +17,56 @@ import (
 // LogLevel pertains to job log levels
 type LogLevel string
 
+const (
+	JobLogLevelDebug   LogLevel = "DEBUG"
+	JobLogLevelVerbose LogLevel = "VERBOSE"
+	JobLogLevelInfo    LogLevel = "INFO"
+	JobLogLevelWarn    LogLevel = "WARN"
+	JobLogLevelError   LogLevel = "ERROR"
+)
+
 // JobFormat specifies the content type
 type JobFormat string
+
+const (
+	JobFormatXML  JobFormat = "xml"
+	JobFormatYAML JobFormat = "yaml"
+)
 
 // DuplicateOption instructs the job importer how to handle duplicate jobs
 type DuplicateOption string
 
+const (
+	DuplicateOptionSkip   DuplicateOption = "skip"
+	DuplicateOptionCreate DuplicateOption = "create"
+	DuplicateOptionUpdate DuplicateOption = "update"
+)
+
 // UUIDOption instructs the job importer how to handle duplicate job uuids
 type UUIDOption string
+
+const (
+	UUIDOptionPreserve UUIDOption = "preserve"
+	UUIDOptionRemove   UUIDOption = "remove"
+)
 
 // ToggleKind informs if executions or scheudles are being targeted
 type ToggleKind string
 
+const (
+	ToggleKindExecution ToggleKind = "execution"
+	ToggleKindSchedule  ToggleKind = "schedule"
+)
+
 // FileState informs the state of the uploaded file
 type FileState string
+
+const (
+	FileStateTemp     FileState = "temp"
+	FileStateDeleted  FileState = "deleted"
+	FileStateExpired  FileState = "expired"
+	FileStateRetained FileState = "retained"
+)
 
 // Job is information about a Rundeck job
 type Job struct {
