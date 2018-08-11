@@ -9,8 +9,6 @@ const EnvRundeckToken = "RUNDECK_TOKEN"
 // EnvRundeckServerURL is the name of the environment variable for the server url
 const EnvRundeckServerURL = "RUNDECK_SERVER_URL"
 
-const localRundeckURL = "http://localhost:4440"
-
 const ExecutionStatusRunning ExecutionStatus = "running"
 const ExecutionStatusSucceeded ExecutionStatus = "succeeded"
 const ExecutionStatusFailed ExecutionStatus = "failed"
