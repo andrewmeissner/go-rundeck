@@ -8,6 +8,9 @@ import (
 	"time"
 )
 
+// ExecutionStatus ensure a constant is used in parameters
+type ExecutionStatus string
+
 const (
 	ExecutionStatusRunning         ExecutionStatus = "running"
 	ExecutionStatusSucceeded       ExecutionStatus = "succeeded"
@@ -17,25 +20,25 @@ const (
 	ExecutionStatusFailedWithRetry ExecutionStatus = "failed-with-retry"
 	ExecutionStatusScheduled       ExecutionStatus = "scheduled"
 	ExecutionStatusOther           ExecutionStatus = "other"
-	ExecutionTypeScheduled         ExecutionType   = "scheduled"
-	ExecutionTypeUser              ExecutionType   = "user"
-	ExecutionTypeUserScheduled     ExecutionType   = "user-scheduled"
 )
+
+// ExecutionType ensure a constant is used in parameters
+type ExecutionType string
+
+const (
+	ExecutionTypeScheduled     ExecutionType = "scheduled"
+	ExecutionTypeUser          ExecutionType = "user"
+	ExecutionTypeUserScheduled ExecutionType = "user-scheduled"
+)
+
+// Boolean often times have more than 2 values
+type Boolean int
 
 const (
 	BooleanDefault Boolean = iota
 	BooleanFalse
 	BooleanTrue
 )
-
-// ExecutionStatus ensure a constant is used in parameters
-type ExecutionStatus string
-
-// ExecutionType ensure a constant is used in parameters
-type ExecutionType string
-
-// Boolean often times have more than 2 values
-type Boolean int
 
 // Execution is information regarding an execution
 type Execution struct {
