@@ -40,6 +40,21 @@ const (
 	BooleanTrue
 )
 
+// ExecutionState is the state of the execution
+type ExecutionState string
+
+const (
+	ExecutionStateWaiting              ExecutionState = "WAITING"
+	ExecutionStateRunning              ExecutionState = "RUNNING"
+	ExecutionStateRunningHandler       ExecutionState = "RUNNING_HANDLER"
+	ExecutionStateSucceeded            ExecutionState = "SUCCEEDED"
+	ExecutionStateFailed               ExecutionState = "FAILED"
+	ExecutionStateAborted              ExecutionState = "ABORTED"
+	ExecutionStateNodePartialSucceeded ExecutionState = "NODE_PARTIAL_SUCCEEDED"
+	ExecutionStateNodeMixed            ExecutionState = "NODE_MIXED"
+	ExecutionStateNotStarted           ExecutionState = "NOT_STARTED"
+)
+
 // Execution is information regarding an execution
 type Execution struct {
 	ID              int                `json:"id"`
@@ -109,6 +124,44 @@ type ExecutionQueryInput struct {
 	JobNameExact          string
 	ExcludeJobNameExact   string
 	ExecutionType         ExecutionType
+}
+
+type ExecutionStateInfo struct {
+	StartTime      time.Time      `json:"startTime"`
+	EndTime        time.Time      `json:"endTime"`
+	UpdateTime     time.Time      `json:"updateTime"`
+	ExecutionState ExecutionState `json:"executionState"`
+}
+
+type ExecutionWorkflow struct {
+	StepCount   int                  `json:"stepCount"`
+	TargetNodes []string             `json:"targetNodes"`
+	Steps       []ExecutionStepState `json:"steps"`
+}
+
+type ExecutionStateIndicator struct {
+	ExecutionState        ExecutionState `json:"executionState"`
+	StepContextIdentifier string         `json:"stepctx"`
+}
+
+type ExecutionStepState struct {
+	ExecutionStateInfo
+	ID                    string                        `json:"id"`
+	StepContextIdentifier string                        `json:"stepctx"`
+	NodeStep              bool                          `json:"nodeStep"`
+	NodeStates            map[string]ExecutionStateInfo `json:"nodeStates"`
+	HasSubworkflow        bool                          `json:"hasSubworkflow"`
+	Workflow              ExecutionWorkflow             `json:"workflow"`
+}
+
+type ExecutionStateResponse struct {
+	ExecutionStateInfo
+	ExecutionWorkflow
+	AllNodes    []string                           `json:"allNodes"`
+	Nodes       map[string]ExecutionStateIndicator `json:"nodes"`
+	ServerNode  string                             `json:"serverNode"`
+	ExecutionID int                                `json:"executionId"`
+	Completed   bool                               `json:"completed"`
 }
 
 // Executions is information pertaining to executions API endpoints
@@ -377,4 +430,18 @@ func (e *Executions) Query(project string, input *ExecutionQueryInput) (*Executi
 
 	var executions ExecutionsResponse
 	return &executions, json.NewDecoder(res.Body).Decode(&executions)
+}
+
+// State gets detailed about the node and step state of an execution by ID. The execution can be currently running or completed.
+func (e *Executions) State(id string) (*ExecutionStateResponse, error) {
+	rawURL := e.c.RundeckAddr + "/execution/" + id + "/state"
+
+	res, err := e.c.checkResponseOK(e.c.get(rawURL))
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	var esr ExecutionStateResponse
+	return &esr, json.NewDecoder(res.Body).Decode(&esr)
 }
