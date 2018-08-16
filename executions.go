@@ -126,6 +126,7 @@ type ExecutionQueryInput struct {
 	ExecutionType         ExecutionType
 }
 
+// ExecutionStateInfo ...
 type ExecutionStateInfo struct {
 	StartTime      time.Time      `json:"startTime"`
 	EndTime        time.Time      `json:"endTime"`
@@ -133,17 +134,20 @@ type ExecutionStateInfo struct {
 	ExecutionState ExecutionState `json:"executionState"`
 }
 
+// ExecutionWorkflow ...
 type ExecutionWorkflow struct {
 	StepCount   int                  `json:"stepCount"`
 	TargetNodes []string             `json:"targetNodes"`
 	Steps       []ExecutionStepState `json:"steps"`
 }
 
+// ExecutionStateIndicator ...
 type ExecutionStateIndicator struct {
 	ExecutionState        ExecutionState `json:"executionState"`
 	StepContextIdentifier string         `json:"stepctx"`
 }
 
+// ExecutionStepState ...
 type ExecutionStepState struct {
 	ExecutionStateInfo
 	ID                    string                        `json:"id"`
@@ -154,6 +158,7 @@ type ExecutionStepState struct {
 	Workflow              ExecutionWorkflow             `json:"workflow"`
 }
 
+// ExecutionStateResponse ...
 type ExecutionStateResponse struct {
 	ExecutionStateInfo
 	ExecutionWorkflow
@@ -162,6 +167,50 @@ type ExecutionStateResponse struct {
 	ServerNode  string                             `json:"serverNode"`
 	ExecutionID int                                `json:"executionId"`
 	Completed   bool                               `json:"completed"`
+}
+
+// ExecutionsOutputInput ...
+type ExecutionsOutputInput struct {
+	Node        string
+	StepContext string
+	Offset      int
+	LastLines   int
+	LastMod     *time.Time
+	Compacted   bool
+}
+
+// ExecutionsOutputResponse ...
+type ExecutionsOutputResponse struct {
+	ID             int            `json:"id"`
+	Message        string         `json:"message"`
+	Error          string         `json:"error"`
+	Unmodified     bool           `json:"unmodified"`
+	Empty          bool           `json:"empty"`
+	Offset         int            `json:"offset"`
+	Completed      bool           `json:"completed"`
+	ExecCompleted  bool           `json:"execCompleted"`
+	HasFailedNodes bool           `json:"hasFailedNodes"`
+	ExecutionState ExecutionState `json:"execState"`
+	LastModified   int64          `json:"lastModified"`
+	ExecDuration   int64          `json:"execDuration"`
+	PercentLoaded  float32        `json:"percentLoaded"`
+	TotalSize      int            `json:"totalSize"`
+	// Filter?  NodeName StepContext?
+	Compacted     bool        `json:"compacted"`
+	CompactedAttr string      `json:"compactedAttr"`
+	Entries       []*LogEntry `json:"entries"`
+}
+
+// LogEntry ...
+type LogEntry struct {
+	Time         string     `json:"time"`
+	AbsoluteTime *time.Time `json:"absolute_time"`
+	Level        LogLevel   `json:"level"`
+	Log          string     `json:"log"`
+	User         string     `json:"user"`
+	Command      string     `json:"command"`
+	Node         string     `json:"node"`
+	StepContext  string     `json:"stepctx"`
 }
 
 // Executions is information pertaining to executions API endpoints
@@ -444,4 +493,55 @@ func (e *Executions) State(id string) (*ExecutionStateResponse, error) {
 
 	var esr ExecutionStateResponse
 	return &esr, json.NewDecoder(res.Body).Decode(&esr)
+}
+
+// Output gets the output for an execution by ID.
+// The execution can be currently running or may have already completed.
+// Output can be filtered down to a specific node or workflow step.
+func (e *Executions) Output(id string, input *ExecutionsOutputInput) (*ExecutionsOutputResponse, error) {
+	rawURL := e.c.RundeckAddr + "/execution/" + id + "/output"
+
+	uri, err := url.Parse(rawURL)
+	if err != nil {
+		return nil, err
+	}
+
+	query := uri.Query()
+
+	if input != nil {
+		if input.Node != "" {
+			uri.Path += "/node/" + input.Node
+		}
+
+		if input.StepContext != "" {
+			uri.Path += "/step/" + input.StepContext
+		}
+
+		if input.Compacted {
+			query.Add("compacted", "true")
+		}
+
+		if input.LastLines != 0 {
+			query.Add("lastlines", strconv.FormatInt(int64(input.LastLines), 10))
+		}
+
+		if input.LastMod != nil {
+			query.Add("lastmod", strconv.FormatInt(int64(input.LastMod.Unix()), 10))
+		}
+
+		if input.Offset != 0 {
+			query.Add("offset", strconv.FormatInt(int64(input.Offset), 10))
+		}
+	}
+
+	uri.RawQuery = query.Encode()
+
+	res, err := e.c.checkResponseOK(e.c.get(uri.String()))
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	var output ExecutionsOutputResponse
+	return &output, json.NewDecoder(res.Body).Decode(&output)
 }
