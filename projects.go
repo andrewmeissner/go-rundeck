@@ -10,6 +10,7 @@ import (
 	"strings"
 )
 
+// Status indicates the general status of an operation
 type Status string
 
 const (
@@ -291,6 +292,7 @@ func (p *Projects) ArchiveExportAsyncDownload(project, token string) (*http.Resp
 	return p.c.checkResponseOK(p.c.get(rawURL))
 }
 
+// ArchiveImport imports a zip archive into the project
 func (p *Projects) ArchiveImport(project string, content []byte, input *ArchiveImportInput) (*ArchiveImportResponse, error) {
 	rawURL := p.c.RundeckAddr + "/project/" + project + "/import"
 
