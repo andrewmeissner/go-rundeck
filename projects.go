@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -246,6 +247,14 @@ func (p *Projects) ArchiveExportAsyncStatus(project, token string) (*ArchiveExpo
 
 // ArchiveExportAsyncDownload downloads the finished artifact
 func (p *Projects) ArchiveExportAsyncDownload(project, token string) (*http.Response, error) {
+	status, err := p.ArchiveExportAsyncStatus(project, token)
+	if err != nil {
+		return nil, err
+	}
+	if !status.Ready {
+		return nil, fmt.Errorf("archive is only %d%% complete", status.Percentage)
+	}
+
 	rawURL := p.c.RundeckAddr + "/project/" + project + "/export/download/" + token
 	return p.c.checkResponseOK(p.c.get(rawURL))
 }
