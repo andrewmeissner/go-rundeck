@@ -4,6 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"net/http"
+	"net/url"
+	"strings"
 )
 
 // Project is metadata about a project in rundeck
@@ -28,12 +31,19 @@ type CreateProjectInput struct {
 // ArchiveExportInput ...
 type ArchiveExportInput struct {
 	ExecutionIDs     []string
-	ExoprtAll        bool
+	ExportAll        bool
 	ExportJobs       bool
 	ExportExecutions bool
 	ExportConfigs    bool
 	ExportReadmes    bool
 	ExportAcls       bool
+}
+
+// ArchiveExportAsyncStatusResponse struct
+type ArchiveExportAsyncStatusResponse struct {
+	Token      string `json:"token"`
+	Ready      bool   `json:"ready"`
+	Percentage int    `json:"int"`
 }
 
 // Projects is information pertaining to projects API endpoints
@@ -188,6 +198,87 @@ func (p *Projects) DeleteConfigKey(project, key string) error {
 }
 
 // ArchiveExport exports a zip archive of the project synchronously
-func (p *Projects) ArchiveExport(project string, input *ArchiveExportInput) error {
-	return errors.New("not implemented yet")
+func (p *Projects) ArchiveExport(project string, input *ArchiveExportInput) (*http.Response, error) {
+	rawURL := p.c.RundeckAddr + "/project" + project + "/export"
+
+	uri, err := url.Parse(rawURL)
+	if err != nil {
+		return nil, err
+	}
+	uri.RawQuery = p.encodeArchiveExportInput(uri.Query(), input)
+
+	return p.c.checkResponseOK(p.c.get(uri.String()))
+}
+
+// ArchiveExportAsync exports a zip archive of the project asynchronously
+func (p *Projects) ArchiveExportAsync(project string, input *ArchiveExportInput) (*ArchiveExportAsyncStatusResponse, error) {
+	rawURL := p.c.RundeckAddr + "/project" + project + "/export/async"
+
+	uri, err := url.Parse(rawURL)
+	if err != nil {
+		return nil, err
+	}
+	uri.RawQuery = p.encodeArchiveExportInput(uri.Query(), input)
+
+	res, err := p.c.checkResponseOK(p.c.get(uri.String()))
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	var status ArchiveExportAsyncStatusResponse
+	return &status, json.NewDecoder(res.Body).Decode(&status)
+}
+
+// ArchiveExportAsyncStatus gets the status of the async archive
+func (p *Projects) ArchiveExportAsyncStatus(project, token string) (*ArchiveExportAsyncStatusResponse, error) {
+	rawURL := p.c.RundeckAddr + "/project/" + project + "/export/status/" + token
+
+	res, err := p.c.checkResponseOK(p.c.get(rawURL))
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	var status ArchiveExportAsyncStatusResponse
+	return &status, json.NewDecoder(res.Body).Decode(&status)
+}
+
+// ArchiveExportAsyncDownload downloads the finished artifact
+func (p *Projects) ArchiveExportAsyncDownload(project, token string) (*http.Response, error) {
+	rawURL := p.c.RundeckAddr + "/project/" + project + "/export/download/" + token
+	return p.c.checkResponseOK(p.c.get(rawURL))
+}
+
+func (p *Projects) encodeArchiveExportInput(query url.Values, input *ArchiveExportInput) string {
+	if input != nil {
+		if input.ExecutionIDs != nil && len(input.ExecutionIDs) > 0 {
+			query.Add("executionIds", strings.Join(input.ExecutionIDs, ","))
+		}
+
+		if input.ExportAcls {
+			query.Add("exportAcls", "true")
+		}
+
+		if input.ExportAll {
+			query.Add("exportAll", "true")
+		}
+
+		if input.ExportConfigs {
+			query.Add("exportConfigs", "true")
+		}
+
+		if input.ExportExecutions {
+			query.Add("exportExecutions", "true")
+		}
+
+		if input.ExportJobs {
+			query.Add("exportJobs", "true")
+		}
+
+		if input.ExportReadmes {
+			query.Add("exportReadmes", "true")
+		}
+	}
+	return query.Encode()
 }
