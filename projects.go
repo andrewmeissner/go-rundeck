@@ -10,6 +10,13 @@ import (
 	"strings"
 )
 
+type Status string
+
+const (
+	StatusSuccessful Status = "successful"
+	StatusFailed     Status = "failed"
+)
+
 // Project is metadata about a project in rundeck
 type Project struct {
 	Name        string `json:"name"`
@@ -45,6 +52,27 @@ type ArchiveExportAsyncStatusResponse struct {
 	Token      string `json:"token"`
 	Ready      bool   `json:"ready"`
 	Percentage int    `json:"int"`
+}
+
+// JobUUIDOption can either be remove or preserve
+type JobUUIDOption string
+
+const (
+	JobUUIDOptionRemove   JobUUIDOption = "remove"
+	JobUUIDOptionPreserve JobUUIDOption = "preserve"
+)
+
+// ArchiveImportInput are option parameters for importing a project archive
+type ArchiveImportInput struct {
+	JobUUIDOption    JobUUIDOption
+	ImportExecutions bool
+	ImportConfig     bool
+	ImportACL        bool
+}
+
+// ArchiveImportResponse ...
+type ArchiveImportResponse struct {
+	ImportStatus Status `json:"import_status"`
 }
 
 // Projects is information pertaining to projects API endpoints
@@ -258,6 +286,49 @@ func (p *Projects) ArchiveExportAsyncDownload(project, token string) (*http.Resp
 
 	rawURL := p.c.RundeckAddr + "/project/" + project + "/export/download/" + token
 	return p.c.checkResponseOK(p.c.get(rawURL))
+}
+
+func (p *Projects) ArchiveImport(project string, content []byte, input *ArchiveImportInput) (*ArchiveImportResponse, error) {
+	rawURL := p.c.RundeckAddr + "/project/" + project + "/import"
+
+	uri, err := url.Parse(rawURL)
+	if err != nil {
+		return nil, err
+	}
+
+	query := uri.Query()
+
+	if input != nil {
+		if input.JobUUIDOption == JobUUIDOptionRemove || input.JobUUIDOption == JobUUIDOptionPreserve {
+			query.Add("jobUuidOption", string(input.JobUUIDOption))
+		}
+
+		if input.ImportACL {
+			query.Add("importACL", "true")
+		}
+
+		if input.ImportConfig {
+			query.Add("importConfig", "true")
+		}
+
+		if input.ImportExecutions {
+			query.Add("importExecutions", "true")
+		}
+	}
+
+	uri.RawQuery = query.Encode()
+
+	headers := map[string]string{
+		"Content-Type": "application/zip",
+	}
+
+	res, err := p.c.checkResponseOK(p.c.putWithAdditionalHeaders(uri.String(), headers, bytes.NewReader(content)))
+	if err != nil {
+		return nil, err
+	}
+
+	var response ArchiveImportResponse
+	return &response, json.NewDecoder(res.Body).Decode(&response)
 }
 
 func (p *Projects) encodeArchiveExportInput(query url.Values, input *ArchiveExportInput) string {
