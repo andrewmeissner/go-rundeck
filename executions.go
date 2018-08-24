@@ -3,6 +3,7 @@ package rundeck
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/url"
 	"strconv"
 	"time"
@@ -257,8 +258,8 @@ func (c *Client) Executions() *Executions {
 }
 
 // GetExecutionsForAJob returns the executions pertaining to a certain job
-func (e *Executions) GetExecutionsForAJob(id string, status *string, paging *PagingInfo) (*ExecutionsResponse, error) {
-	rawURL := e.c.RundeckAddr + "/job/" + id + "/executions"
+func (e *Executions) GetExecutionsForAJob(id int, status *string, paging *PagingInfo) (*ExecutionsResponse, error) {
+	rawURL := fmt.Sprintf("%s/job/%d/executions", e.c.RundeckAddr, id)
 
 	uri, err := url.Parse(rawURL)
 	if err != nil {
@@ -294,8 +295,8 @@ func (e *Executions) GetExecutionsForAJob(id string, status *string, paging *Pag
 }
 
 // DeleteExecutions deletes all executions for a job
-func (e *Executions) DeleteExecutions(id string) (*DeleteExecutionsResponse, error) {
-	rawURL := e.c.RundeckAddr + "/job/" + id + "/executions"
+func (e *Executions) DeleteExecutions(id int) (*DeleteExecutionsResponse, error) {
+	rawURL := fmt.Sprintf("%s/job/%d/executions", e.c.RundeckAddr, id)
 
 	res, err := e.c.checkResponseOK(e.c.delete(rawURL, nil))
 	if err != nil {
@@ -515,8 +516,8 @@ func (e *Executions) Query(project string, input *ExecutionQueryInput) (*Executi
 }
 
 // State gets detailed about the node and step state of an execution by ID. The execution can be currently running or completed.
-func (e *Executions) State(id string) (*ExecutionStateResponse, error) {
-	rawURL := e.c.RundeckAddr + "/execution/" + id + "/state"
+func (e *Executions) State(id int) (*ExecutionStateResponse, error) {
+	rawURL := fmt.Sprintf("%s/execution/%d/state", e.c.RundeckAddr, id)
 
 	res, err := e.c.checkResponseOK(e.c.get(rawURL))
 	if err != nil {
@@ -531,8 +532,8 @@ func (e *Executions) State(id string) (*ExecutionStateResponse, error) {
 // Output gets the output for an execution by ID.
 // The execution can be currently running or may have already completed.
 // Output can be filtered down to a specific node or workflow step.
-func (e *Executions) Output(id string, input *ExecutionsOutputInput) (*ExecutionsOutputResponse, error) {
-	rawURL := e.c.RundeckAddr + "/execution/" + id + "/output"
+func (e *Executions) Output(id int, input *ExecutionsOutputInput) (*ExecutionsOutputResponse, error) {
+	rawURL := fmt.Sprintf("%s/execution/%d/output", e.c.RundeckAddr, id)
 
 	uri, err := url.Parse(rawURL)
 	if err != nil {
@@ -580,8 +581,8 @@ func (e *Executions) Output(id string, input *ExecutionsOutputInput) (*Execution
 }
 
 // OutputWithState get the metadata associated with workflow step state changes along with the log output, optionally excluding log output.
-func (e *Executions) OutputWithState(id string, stateOnly bool) (*ExecutionsOutputResponse, error) {
-	rawURL := e.c.RundeckAddr + "/execution/" + id + "/output/state"
+func (e *Executions) OutputWithState(id int, stateOnly bool) (*ExecutionsOutputResponse, error) {
+	rawURL := fmt.Sprintf("%s/execution/%d/output/state", e.c.RundeckAddr, id)
 
 	uri, err := url.Parse(rawURL)
 	if err != nil {
@@ -607,8 +608,8 @@ func (e *Executions) OutputWithState(id string, stateOnly bool) (*ExecutionsOutp
 }
 
 // Abort aborts a running execution by id
-func (e *Executions) Abort(id string, asUser *string) (*AbortExecutionResponse, error) {
-	rawURL := e.c.RundeckAddr + "/execution/" + id + "/abort"
+func (e *Executions) Abort(id int, asUser *string) (*AbortExecutionResponse, error) {
+	rawURL := fmt.Sprintf("%s/execution/%d/abort", e.c.RundeckAddr, id)
 
 	uri, err := url.Parse(rawURL)
 	if err != nil {
