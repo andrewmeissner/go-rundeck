@@ -79,6 +79,25 @@ type ArchiveImportResponse struct {
 	ACLErrors       []string `json:"acl_errors"`
 }
 
+// NodeEntryAnything represents everything else that can be added to the node entry map
+type NodeEntryAnything map[string]string
+
+// NodeEntry contains some specific entries in the node entry map
+type NodeEntry struct {
+	Nodename    string `json:"nodename"`
+	Hostname    string `json:"hostname"`
+	Username    string `json:"username"`
+	Description string `json:"description"`
+	Tags        string `json:"tags"`
+	OSFamily    string `json:"osFamily"`
+	OSArch      string `json:"osArch"`
+	OSName      string `json:"osName"`
+	OSVersion   string `json:"osVersion"`
+	EditURL     string `json:"editUrl"`
+	RemoteURL   string `json:"remoteUrl"`
+	NodeEntryAnything
+}
+
 // Projects is information pertaining to projects API endpoints
 type Projects struct {
 	c *Client
@@ -334,6 +353,32 @@ func (p *Projects) ArchiveImport(project string, content []byte, input *ArchiveI
 
 	var response ArchiveImportResponse
 	return &response, json.NewDecoder(res.Body).Decode(&response)
+}
+
+// ListResources lists resources for a given project
+func (p *Projects) ListResources(project string, nodeFilters map[string]string) (map[string]*NodeEntry, error) {
+	rawURL := p.c.RundeckAddr + "/project/" + project + "/resources"
+
+	uri, err := url.Parse(rawURL)
+	if err != nil {
+		return nil, err
+	}
+
+	query := uri.Query()
+
+	if nodeFilters != nil && len(nodeFilters) > 0 {
+		query.Add("filter", p.c.convertFiltersToSerializeableFormat(nodeFilters))
+	}
+
+	uri.RawQuery = query.Encode()
+
+	res, err := p.c.checkResponseOK(p.c.get(uri.String()))
+	if err != nil {
+		return nil, err
+	}
+
+	var entries map[string]*NodeEntry
+	return entries, json.NewDecoder(res.Body).Decode(&entries)
 }
 
 func (p *Projects) encodeArchiveExportInput(query url.Values, input *ArchiveExportInput) string {
