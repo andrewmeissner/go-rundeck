@@ -203,15 +203,48 @@ type ExecutionsOutputResponse struct {
 
 // LogEntry ...
 type LogEntry struct {
-	Time         string     `json:"time"`
-	AbsoluteTime *time.Time `json:"absolute_time"`
-	Level        LogLevel   `json:"level"`
-	Log          string     `json:"log"`
-	User         string     `json:"user"`
-	Command      string     `json:"command"`
-	Node         string     `json:"node"`
-	StepContext  string     `json:"stepctx"`
+	Time         string       `json:"time"`
+	AbsoluteTime *time.Time   `json:"absolute_time"`
+	Level        LogLevel     `json:"level"`
+	Log          string       `json:"log"`
+	User         string       `json:"user"`
+	Command      string       `json:"command"`
+	Node         string       `json:"node"`
+	StepContext  string       `json:"stepctx"`
+	Type         LogEntryType `json:"type"`
 }
+
+// LogEntryType ...
+type LogEntryType string
+
+const (
+	LogEntryTypeLog       LogEntryType = "log"
+	LogEntryTypeStepBegin LogEntryType = "stepbegin"
+	LogEntryTypeStepEnd   LogEntryType = "stepend"
+	LogEntryTypeNodeBegin LogEntryType = "nodebegin"
+	LogEntryTypeNodeEnd   LogEntryType = "nodeend"
+)
+
+// AbortExecutionResponse ...
+type AbortExecutionResponse struct {
+	Abort     Abort     `json:"abort"`
+	Execution Execution `json:"execution"`
+}
+
+// Abort contains the state and reason for the abort
+type Abort struct {
+	Status AbortState `json:"status"`
+	Reason string     `json:"reason"`
+}
+
+// AbortState will be one of "pending", "failed", or "aborted"
+type AbortState string
+
+const (
+	AbortStatePending AbortState = "pending"
+	AbortStateFailed  AbortState = "failed"
+	AbortStateAborted AbortState = "aborted"
+)
 
 // Executions is information pertaining to executions API endpoints
 type Executions struct {
@@ -544,4 +577,58 @@ func (e *Executions) Output(id string, input *ExecutionsOutputInput) (*Execution
 
 	var output ExecutionsOutputResponse
 	return &output, json.NewDecoder(res.Body).Decode(&output)
+}
+
+// OutputWithState get the metadata associated with workflow step state changes along with the log output, optionally excluding log output.
+func (e *Executions) OutputWithState(id string, stateOnly bool) (*ExecutionsOutputResponse, error) {
+	rawURL := e.c.RundeckAddr + "/execution/" + id + "/output/state"
+
+	uri, err := url.Parse(rawURL)
+	if err != nil {
+		return nil, err
+	}
+
+	query := uri.Query()
+
+	if stateOnly {
+		query.Add("stateOnly", "true")
+	}
+
+	uri.RawQuery = query.Encode()
+
+	res, err := e.c.checkResponseOK(e.c.get(uri.String()))
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	var output ExecutionsOutputResponse
+	return &output, json.NewDecoder(res.Body).Decode(&output)
+}
+
+// Abort aborts a running execution by id
+func (e *Executions) Abort(id string, asUser *string) (*AbortExecutionResponse, error) {
+	rawURL := e.c.RundeckAddr + "/execution/" + id + "/abort"
+
+	uri, err := url.Parse(rawURL)
+	if err != nil {
+		return nil, err
+	}
+
+	query := uri.Query()
+
+	if asUser != nil {
+		query.Add("asUser", stringValue(asUser))
+	}
+
+	uri.RawQuery = query.Encode()
+
+	res, err := e.c.checkResponseOK(e.c.get(uri.String()))
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	var abortResponse AbortExecutionResponse
+	return &abortResponse, json.NewDecoder(res.Body).Decode(&abortResponse)
 }
