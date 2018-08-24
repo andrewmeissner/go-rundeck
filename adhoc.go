@@ -8,8 +8,33 @@ import (
 
 // AdhocCommandStringInput ...
 type AdhocCommandStringInput struct {
+	Exec string `json:"exec"`
+	adhocOptions
+}
+
+// AdhocScriptInput ...
+type AdhocScriptInput struct {
+	Script string `json:"script"`
+	adhocOptions
+	adhocScriptOptions
+}
+
+// AdhocURLInput ...
+type AdhocURLInput struct {
+	URL string `json:"url"`
+	adhocOptions
+	adhocScriptOptions
+}
+
+type adhocScriptOptions struct {
+	ArgString             string `json:"argString,omitempty"`
+	ScriptInterpreter     string `json:"scriptInterpreter,omitempty"`
+	InterpreterArgsQuoted bool   `json:"interpreterArgsQuoted,omitempty"`
+	FileExtension         string `json:"fileExtension,omitempty"`
+}
+
+type adhocOptions struct {
 	Project         string `json:"project"`
-	Exec            string `json:"exec"`
 	NodeThreadcount int    `json:"nodeThreadcount,omitempty"`
 	NodeKeepGoing   bool   `json:"nodeKeepgoing,omitempty"`
 	AsUser          string `json:"asUser,omitempty"`
@@ -58,6 +83,67 @@ func (a *AdhocAPI) RunCommandString(input *AdhocCommandStringInput) (*AdhocComma
 		return nil, err
 	}
 	defer res.Body.Close()
+
+	var output AdhocCommandResponse
+	return &output, json.NewDecoder(res.Body).Decode(&output)
+}
+
+// RunScript runs a script
+func (a *AdhocAPI) RunScript(input *AdhocScriptInput) (*AdhocCommandResponse, error) {
+	if input == nil {
+		return nil, errors.New("input cannot be nil")
+	}
+
+	if input.Project == "" {
+		return nil, errors.New("input.Project cannot be empty")
+	}
+
+	if input.Script == "" {
+		return nil, errors.New("input.Script cannot be empty")
+	}
+
+	rawURL := a.c.RundeckAddr + "/project/" + input.Project + "/run/script"
+
+	bs, err := json.Marshal(input)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := a.c.checkResponseOK(a.c.post(rawURL, bytes.NewReader(bs)))
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	var output AdhocCommandResponse
+	return &output, json.NewDecoder(res.Body).Decode(&output)
+}
+
+// RunURL runs a script downloaded from a url
+func (a *AdhocAPI) RunURL(input *AdhocURLInput) (*AdhocCommandResponse, error) {
+	if input == nil {
+		return nil, errors.New("input cannot be nil")
+	}
+
+	if input.Project == "" {
+		return nil, errors.New("input.Project cannot be empty")
+	}
+
+	if input.URL == "" {
+		return nil, errors.New("input.URL cannot be empty")
+	}
+
+	rawURL := a.c.RundeckAddr + "/project/" + input.Project + "/run/url"
+
+	bs, err := json.Marshal(input)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := a.c.checkResponseOK(a.c.post(rawURL, bytes.NewReader(bs)))
+	if err != nil {
+		return nil, err
+	}
 
 	var output AdhocCommandResponse
 	return &output, json.NewDecoder(res.Body).Decode(&output)
