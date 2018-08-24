@@ -547,15 +547,6 @@ func (j *Jobs) ListFilesUploadedForJob(id string, fileState *FileState, max *int
 func (j *Jobs) FileInfo(id string) (*FileOption, error) {
 	rawURL := j.c.RundeckAddr + "/jobs/file/" + id
 
-	// res, err := j.c.get(rawURL)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// defer res.Body.Close()
-
-	// if res.StatusCode != http.StatusOK {
-	// 	return nil, makeError(res.Body)
-	// }
 	res, err := j.c.checkResponseOK(j.c.get(rawURL))
 	if err != nil {
 		return nil, err
