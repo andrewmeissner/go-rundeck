@@ -251,6 +251,7 @@ func (p *Projects) ArchiveExportAsyncDownload(project, token string) (*http.Resp
 	if err != nil {
 		return nil, err
 	}
+
 	if !status.Ready {
 		return nil, fmt.Errorf("archive is only %d%% complete", status.Percentage)
 	}
