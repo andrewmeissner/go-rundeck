@@ -15,6 +15,7 @@ type KeyResource struct {
 	sharedKeyMeta
 }
 
+// KeyMetadata ...
 type KeyMetadata struct {
 	KeyType     string `json:"Rundeck-key-type"`
 	ContentMask string `json:"Rundeck-content-mask"`
