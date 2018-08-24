@@ -25,6 +25,17 @@ type CreateProjectInput struct {
 	Config map[string]string `json:"config,omitempty"`
 }
 
+// ArchiveExportInput ...
+type ArchiveExportInput struct {
+	ExecutionIDs     []string
+	ExoprtAll        bool
+	ExportJobs       bool
+	ExportExecutions bool
+	ExportConfigs    bool
+	ExportReadmes    bool
+	ExportAcls       bool
+}
+
 // Projects is information pertaining to projects API endpoints
 type Projects struct {
 	c *Client
@@ -174,4 +185,9 @@ func (p *Projects) DeleteConfigKey(project, key string) error {
 		return err
 	}
 	return nil
+}
+
+// ArchiveExport exports a zip archive of the project synchronously
+func (p *Projects) ArchiveExport(project string, input *ArchiveExportInput) error {
+	return errors.New("not implemented yet")
 }
