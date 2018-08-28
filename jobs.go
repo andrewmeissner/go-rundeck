@@ -332,8 +332,10 @@ func (j *Jobs) Import(project string, input *ImportJobsInput) (*ImportJobsRespon
 	query := uri.Query()
 
 	fileFormat := JobFormatXML
+	contentType := "application/xml"
 	if input.FileFormat == JobFormatYAML {
 		fileFormat = JobFormatYAML
+		contentType = "application/yaml"
 	}
 	query.Add("fileformat", string(fileFormat))
 
@@ -347,7 +349,7 @@ func (j *Jobs) Import(project string, input *ImportJobsInput) (*ImportJobsRespon
 
 	uri.RawQuery = query.Encode()
 
-	res, err := j.c.checkResponseOK(j.c.post(uri.String(), bytes.NewReader(input.RawContent)))
+	res, err := j.c.checkResponseOK(j.c.postWithAdditionalHeaders(uri.String(), map[string]string{"Content-Type": contentType}, bytes.NewReader(input.RawContent)))
 	if err != nil {
 		return nil, err
 	}
