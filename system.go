@@ -21,15 +21,15 @@ type SystemInfoResponse struct {
 
 // SystemInfo is information about the rundeck system
 type SystemInfo struct {
-	Timestamp   Timestamp       `json:"timestamp"`
-	Rundeck     Rundeck         `json:"rundeck"`
-	Executions  string          `json:"executions"`
-	OS          OperatingSystem `json:"os"`
-	JVM         JVM             `json:"jvm"`
-	Stats       Stats           `json:"stats"`
-	Metrics     Metrics         `json:"metrics"`
-	ThreadDump  ThreadDump      `json:"threadDump"`
-	HealthCheck HealthCheck     `json:"healthcheck"`
+	Timestamp   Timestamp             `json:"timestamp"`
+	Rundeck     Rundeck               `json:"rundeck"`
+	Executions  ExecutionModeResponse `json:"executions"`
+	OS          OperatingSystem       `json:"os"`
+	JVM         JVM                   `json:"jvm"`
+	Stats       Stats                 `json:"stats"`
+	Metrics     Metrics               `json:"metrics"`
+	ThreadDump  ThreadDump            `json:"threadDump"`
+	HealthCheck HealthCheck           `json:"healthcheck"`
 }
 
 // Timestamp is time information on the Rundeck server
@@ -50,8 +50,8 @@ type Rundeck struct {
 
 // ExecutionModeResponse is information about the rundeck server's ability to execute jobs
 type ExecutionModeResponse struct {
-	Active        bool          `json:"active"`
-	ExecutionMode ExecutionMode `json:"executionMode"`
+	Active        bool   `json:"active"`
+	ExecutionMode string `json:"executionMode"`
 }
 
 // OperatingSystem is information regarding the Rundeck host
