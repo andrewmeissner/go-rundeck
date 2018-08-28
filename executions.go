@@ -104,7 +104,7 @@ type DeleteExecutionsResponse struct {
 // ExecutionQueryInput are parameters to narrow down the result set of a query operation
 type ExecutionQueryInput struct {
 	PagingInfo
-	Status                ExecutionStatus
+	Status                string
 	AbortedBy             string
 	User                  string
 	RecentFilter          string
@@ -129,10 +129,10 @@ type ExecutionQueryInput struct {
 
 // ExecutionStateInfo ...
 type ExecutionStateInfo struct {
-	StartTime      time.Time      `json:"startTime"`
-	EndTime        time.Time      `json:"endTime"`
-	UpdateTime     time.Time      `json:"updateTime"`
-	ExecutionState ExecutionState `json:"executionState"`
+	StartTime      time.Time `json:"startTime"`
+	EndTime        time.Time `json:"endTime"`
+	UpdateTime     time.Time `json:"updateTime"`
+	ExecutionState string    `json:"executionState"`
 }
 
 // ExecutionWorkflow ...
@@ -144,8 +144,8 @@ type ExecutionWorkflow struct {
 
 // ExecutionStateIndicator ...
 type ExecutionStateIndicator struct {
-	ExecutionState        ExecutionState `json:"executionState"`
-	StepContextIdentifier string         `json:"stepctx"`
+	ExecutionState        string `json:"executionState"`
+	StepContextIdentifier string `json:"stepctx"`
 }
 
 // ExecutionStepState ...
@@ -182,20 +182,20 @@ type ExecutionsOutputInput struct {
 
 // ExecutionsOutputResponse ...
 type ExecutionsOutputResponse struct {
-	ID             int            `json:"id"`
-	Message        string         `json:"message"`
-	Error          string         `json:"error"`
-	Unmodified     bool           `json:"unmodified"`
-	Empty          bool           `json:"empty"`
-	Offset         int            `json:"offset"`
-	Completed      bool           `json:"completed"`
-	ExecCompleted  bool           `json:"execCompleted"`
-	HasFailedNodes bool           `json:"hasFailedNodes"`
-	ExecutionState ExecutionState `json:"execState"`
-	LastModified   int64          `json:"lastModified"`
-	ExecDuration   int64          `json:"execDuration"`
-	PercentLoaded  float32        `json:"percentLoaded"`
-	TotalSize      int            `json:"totalSize"`
+	ID             int     `json:"id"`
+	Message        string  `json:"message"`
+	Error          string  `json:"error"`
+	Unmodified     bool    `json:"unmodified"`
+	Empty          bool    `json:"empty"`
+	Offset         int     `json:"offset"`
+	Completed      bool    `json:"completed"`
+	ExecCompleted  bool    `json:"execCompleted"`
+	HasFailedNodes bool    `json:"hasFailedNodes"`
+	ExecutionState string  `json:"execState"`
+	LastModified   int64   `json:"lastModified"`
+	ExecDuration   int64   `json:"execDuration"`
+	PercentLoaded  float32 `json:"percentLoaded"`
+	TotalSize      int     `json:"totalSize"`
 	// Filter?  NodeName StepContext?
 	Compacted     bool        `json:"compacted"`
 	CompactedAttr string      `json:"compactedAttr"`
@@ -204,15 +204,15 @@ type ExecutionsOutputResponse struct {
 
 // LogEntry ...
 type LogEntry struct {
-	Time         string       `json:"time"`
-	AbsoluteTime *time.Time   `json:"absolute_time"`
-	Level        LogLevel     `json:"level"`
-	Log          string       `json:"log"`
-	User         string       `json:"user"`
-	Command      string       `json:"command"`
-	Node         string       `json:"node"`
-	StepContext  string       `json:"stepctx"`
-	Type         LogEntryType `json:"type"`
+	Time         string     `json:"time"`
+	AbsoluteTime *time.Time `json:"absolute_time"`
+	Level        LogLevel   `json:"level"`
+	Log          string     `json:"log"`
+	User         string     `json:"user"`
+	Command      string     `json:"command"`
+	Node         string     `json:"node"`
+	StepContext  string     `json:"stepctx"`
+	Type         string     `json:"type"`
 }
 
 // LogEntryType ...
@@ -234,8 +234,8 @@ type AbortExecutionResponse struct {
 
 // Abort contains the state and reason for the abort
 type Abort struct {
-	Status AbortState `json:"status"`
-	Reason string     `json:"reason"`
+	Status string `json:"status"`
+	Reason string `json:"reason"`
 }
 
 // AbortState will be one of "pending", "failed", or "aborted"

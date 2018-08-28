@@ -23,7 +23,7 @@ type SystemInfoResponse struct {
 type SystemInfo struct {
 	Timestamp   Timestamp       `json:"timestamp"`
 	Rundeck     Rundeck         `json:"rundeck"`
-	Executions  ExecutionMode   `json:"executions"`
+	Executions  string          `json:"executions"`
 	OS          OperatingSystem `json:"os"`
 	JVM         JVM             `json:"jvm"`
 	Stats       Stats           `json:"stats"`

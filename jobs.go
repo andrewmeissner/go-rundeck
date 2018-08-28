@@ -109,7 +109,7 @@ type RunJobInput struct {
 }
 
 type runJobInputSerializeable struct {
-	LogLevel  LogLevel          `json:"loglevel,omitempty"`
+	LogLevel  string            `json:"loglevel,omitempty"`
 	AsUser    string            `json:"asUser,omitempty"`
 	Filter    string            `json:"filter,omitempty"`
 	RunAtTime time.Time         `json:"runAtTime,omitempty"`
@@ -189,7 +189,7 @@ type UploadedFilesResponse struct {
 type FileOption struct {
 	ID             string    `json:"id"`
 	User           string    `json:"user"`
-	FileState      FileState `json:"fileState"`
+	FileState      string    `json:"fileState"`
 	SHA            string    `json:"sha"`
 	JobID          string    `json:"jobId"`
 	DateCreated    time.Time `json:"dateCreated"`
@@ -603,7 +603,7 @@ func (j *Jobs) urlEncodeListInput(rawURL string, input *ListJobsInput) (string, 
 func (j *Jobs) convertToSerializeable(input *RunJobInput) *runJobInputSerializeable {
 	var serializeable runJobInputSerializeable
 	serializeable.AsUser = input.AsUser
-	serializeable.LogLevel = input.LogLevel
+	serializeable.LogLevel = string(input.LogLevel)
 	if input.Options != nil {
 		serializeable.Options = input.Options
 	}
