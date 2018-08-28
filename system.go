@@ -218,7 +218,7 @@ func (s *System) SetExecutionMode(mode ExecutionMode) (*ExecutionModeResponse, e
 	}
 
 	executionMode.Active = true
-	if executionMode.ExecutionMode == ExecutionModePassive {
+	if executionMode.ExecutionMode == string(ExecutionModePassive) {
 		executionMode.Active = false
 	}
 
