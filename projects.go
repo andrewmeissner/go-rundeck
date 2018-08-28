@@ -73,7 +73,7 @@ type ArchiveImportInput struct {
 
 // ArchiveImportResponse ...
 type ArchiveImportResponse struct {
-	ImportStatus    string   `json:"import_status"`
+	ImportStatus    Status   `json:"import_status"`
 	Errors          []string `json:"errors"`
 	ExecutionErrors []string `json:"execution_errors"`
 	ACLErrors       []string `json:"acl_errors"`

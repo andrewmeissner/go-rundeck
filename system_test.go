@@ -39,7 +39,7 @@ func TestSetExecutionMode(t *testing.T) {
 	if res.Active {
 		t.Errorf("active should be false on a passive set")
 	}
-	if res.ExecutionMode != string(rundeck.ExecutionModePassive) {
+	if res.ExecutionMode != rundeck.ExecutionModePassive {
 		t.Errorf("setting execution to passive failed")
 	}
 
@@ -50,7 +50,7 @@ func TestSetExecutionMode(t *testing.T) {
 	if !res.Active {
 		t.Errorf("active should be true on an active set")
 	}
-	if res.ExecutionMode != string(rundeck.ExecutionModeActive) {
+	if res.ExecutionMode != rundeck.ExecutionModeActive {
 		t.Errorf("setting execution to active failed")
 	}
 }

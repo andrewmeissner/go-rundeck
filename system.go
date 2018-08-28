@@ -50,8 +50,8 @@ type Rundeck struct {
 
 // ExecutionModeResponse is information about the rundeck server's ability to execute jobs
 type ExecutionModeResponse struct {
-	Active        bool   `json:"active"`
-	ExecutionMode string `json:"executionMode"`
+	Active        bool          `json:"active"`
+	ExecutionMode ExecutionMode `json:"executionMode"`
 }
 
 // OperatingSystem is information regarding the Rundeck host
@@ -218,7 +218,7 @@ func (s *System) SetExecutionMode(mode ExecutionMode) (*ExecutionModeResponse, e
 	}
 
 	executionMode.Active = true
-	if executionMode.ExecutionMode == string(ExecutionModePassive) {
+	if executionMode.ExecutionMode == ExecutionModePassive {
 		executionMode.Active = false
 	}
 
