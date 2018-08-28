@@ -461,7 +461,12 @@ func (j *Jobs) BulkToggleExecutionsOrSchedules(input *BulkModifyInput, enabled b
 		rawURL += "/disable"
 	}
 
-	res, err := j.c.checkResponseOK(j.c.post(rawURL, nil))
+	bs, err := json.Marshal(input)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := j.c.checkResponseOK(j.c.post(rawURL, bytes.NewReader(bs)))
 	if err != nil {
 		return nil, err
 	}
