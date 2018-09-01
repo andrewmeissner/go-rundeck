@@ -1,5 +1,7 @@
 # standup with the --no-parallel flag
 
+numRundecks = 2
+
 Vagrant.configure("2") do |config|
     #  /var/rundeck/projects/<PROJECT>/etc/resources.xml
 
@@ -7,7 +9,7 @@ Vagrant.configure("2") do |config|
 
     config.vm.define "postgres-rundeck" do |postgres|
         postgres.vm.provider "docker" do |d|
-            d.image = "postgres:10.4-alpine"
+            d.image = "postgres:10.5-alpine"
             d.name = "postgres-rundeck"
             d.ports = ["5432:5432"]
             d.env = {
@@ -18,26 +20,23 @@ Vagrant.configure("2") do |config|
         end
     end
 
-    rundeck_versions = ["3.0.1", "2.11.5"]
-
-    (1..rundeck_versions.length).each do |i|
+    (1..numRundecks).each do |i|
         config.vm.define "rundeck-#{i}" do |rundeck|
             rundeck.vm.provider "docker" do |d|
-                d.image = "jordan/rundeck:#{rundeck_versions[i-1]}"
+                d.image = "rundeck/rundeck:3.0.5"
                 d.name = "rundeck-#{i}"
-                d.ports = ["444#{i-1}:4440"]
+                d.ports = ["444#{i-1}:444#{i-1}"]
+                d.cmd = ["-Dserver.http.port=444#{i-1}"]
                 d.env = {
-                    "RUNDECK_PASSWORD": "rundeckpassword",
-                    "RUNDECK_ADMIN_PASSWORD": "admin",
-                    "EXTERNAL_SERVER_URL": "http://localhost:444#{i-1}",
-                    "CLUSTER_MODE": "true",
-                    "DATABASE_URL": "jdbc:postgresql://postgres:5432/rundeckdb",
-                    "RUNDECK_STORAGE_PROVIDER": "db",
-                    "RUNDECK_PROJECT_STORAGE_TYPE": "db",
-                    "NO_LOCAL_MYSQL": "true"
+                    "RUNDECK_DATABASE_DRIVER": "org.postgresql.Driver",
+                    "RUNDECK_DATABASE_USERNAME": "rundeck",
+                    "RUNDECK_DATABASE_PASSWORD": "rundeckpassword",
+                    "RUNDECK_DATABASE_URL": "jdbc:postgresql://postgres:5432/rundeckdb",
+                    "RUNDECK_GRAILS_URL": "http://localhost:444#{i-1}",
+                    "RUNDECK_STORAGE_PROVIDER": "db"
                 }
                 d.link("postgres-rundeck:postgres")
             end
         end
-    end    
+    end
 end
