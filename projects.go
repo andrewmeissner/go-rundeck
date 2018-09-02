@@ -33,8 +33,9 @@ type ProjectInfo struct {
 
 // CreateProjectInput is the payload when posting for project creation
 type CreateProjectInput struct {
-	Name   string            `json:"name"`
-	Config map[string]string `json:"config,omitempty"`
+	Name        string            `json:"name"`
+	Description string            `json:"description,omitempty"`
+	Config      map[string]string `json:"config,omitempty"`
 }
 
 // ArchiveExportInput ...
