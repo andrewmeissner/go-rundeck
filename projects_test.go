@@ -348,3 +348,27 @@ func TestListProjectResources(t *testing.T) {
 		t.Error("failed to delete project", err)
 	}
 }
+
+func TestSynchronousArchiveExport(t *testing.T) {
+	cli := rundeck.NewClient(nil)
+
+	name := "Test"
+	description := "test project for synchronous archive"
+
+	project, err := cli.Projects().Create(&rundeck.CreateProjectInput{
+		Name:        name,
+		Description: description,
+	})
+	if err != nil {
+		t.Error("project failed to create", name, err)
+	}
+
+	_, err = cli.Projects().ArchiveExport(project.Name, &rundeck.ArchiveExportInput{ExportAll: true})
+	if err != nil {
+		t.Error("failed to export all", err)
+	}
+
+	if err := cli.Projects().Delete(project.Name); err != nil {
+		t.Error("project failed to delete", err)
+	}
+}
