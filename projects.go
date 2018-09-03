@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net/http"
+	"io/ioutil"
 	"net/url"
 	"strings"
 )
@@ -256,8 +256,8 @@ func (p *Projects) DeleteConfigKey(project, key string) error {
 }
 
 // ArchiveExport exports a zip archive of the project synchronously
-func (p *Projects) ArchiveExport(project string, input *ArchiveExportInput) (*http.Response, error) {
-	rawURL := p.c.RundeckAddr + "/project" + project + "/export"
+func (p *Projects) ArchiveExport(project string, input *ArchiveExportInput) ([]byte, error) {
+	rawURL := p.c.RundeckAddr + "/project/" + project + "/export"
 
 	uri, err := url.Parse(rawURL)
 	if err != nil {
@@ -265,12 +265,18 @@ func (p *Projects) ArchiveExport(project string, input *ArchiveExportInput) (*ht
 	}
 	uri.RawQuery = p.encodeArchiveExportInput(uri.Query(), input)
 
-	return p.c.checkResponseOK(p.c.get(uri.String()))
+	res, err := p.c.checkResponseOK(p.c.get(uri.String()))
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	return ioutil.ReadAll(res.Body)
 }
 
 // ArchiveExportAsync exports a zip archive of the project asynchronously
 func (p *Projects) ArchiveExportAsync(project string, input *ArchiveExportInput) (*ArchiveExportAsyncStatusResponse, error) {
-	rawURL := p.c.RundeckAddr + "/project" + project + "/export/async"
+	rawURL := p.c.RundeckAddr + "/project/" + project + "/export/async"
 
 	uri, err := url.Parse(rawURL)
 	if err != nil {
@@ -303,7 +309,7 @@ func (p *Projects) ArchiveExportAsyncStatus(project, token string) (*ArchiveExpo
 }
 
 // ArchiveExportAsyncDownload downloads the finished artifact
-func (p *Projects) ArchiveExportAsyncDownload(project, token string) (*http.Response, error) {
+func (p *Projects) ArchiveExportAsyncDownload(project, token string) ([]byte, error) {
 	status, err := p.ArchiveExportAsyncStatus(project, token)
 	if err != nil {
 		return nil, err
@@ -314,7 +320,13 @@ func (p *Projects) ArchiveExportAsyncDownload(project, token string) (*http.Resp
 	}
 
 	rawURL := p.c.RundeckAddr + "/project/" + project + "/export/download/" + token
-	return p.c.checkResponseOK(p.c.get(rawURL))
+	res, err := p.c.checkResponseOK(p.c.get(rawURL))
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	return ioutil.ReadAll(res.Body)
 }
 
 // ArchiveImport imports a zip archive into the project
