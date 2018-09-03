@@ -38,6 +38,12 @@ type CreateProjectInput struct {
 	Config      map[string]string `json:"config,omitempty"`
 }
 
+// ProjectConfigKeyPair is a single key pair from a project configuration
+type ProjectConfigKeyPair struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
+}
+
 // ArchiveExportInput ...
 type ArchiveExportInput struct {
 	ExecutionIDs     []string
@@ -207,7 +213,7 @@ func (p *Projects) Configure(project string, config map[string]string) (map[stri
 }
 
 // GetConfigKey retieves the value
-func (p *Projects) GetConfigKey(project, key string) (map[string]string, error) {
+func (p *Projects) GetConfigKey(project, key string) (*ProjectConfigKeyPair, error) {
 	rawURL := p.c.RundeckAddr + "/project/" + project + "/config/" + key
 
 	res, err := p.c.checkResponseOK(p.c.get(rawURL))
@@ -216,8 +222,8 @@ func (p *Projects) GetConfigKey(project, key string) (map[string]string, error) 
 	}
 	defer res.Body.Close()
 
-	var result map[string]string
-	return result, json.NewDecoder(res.Body).Decode(&result)
+	var result ProjectConfigKeyPair
+	return &result, json.NewDecoder(res.Body).Decode(&result)
 }
 
 // SetConfigKey modifies the value
