@@ -8,7 +8,7 @@ import (
 )
 
 func TestListProjects(t *testing.T) {
-	cli := rundeck.NewClient(rundeck.DefaultConfig())
+	cli := rundeck.NewClient(nil)
 
 	numProjects := 3
 	projects := make([]*rundeck.ProjectInfo, numProjects)
@@ -45,7 +45,7 @@ func TestListProjects(t *testing.T) {
 }
 
 func TestCreateProject(t *testing.T) {
-	cli := rundeck.NewClient(rundeck.DefaultConfig())
+	cli := rundeck.NewClient(nil)
 
 	name := "Test"
 	info, err := cli.Projects().Create(&rundeck.CreateProjectInput{Name: name})
@@ -63,7 +63,7 @@ func TestCreateProject(t *testing.T) {
 }
 
 func TestCreateWithDescription(t *testing.T) {
-	cli := rundeck.NewClient(rundeck.DefaultConfig())
+	cli := rundeck.NewClient(nil)
 
 	name := "Test"
 	myDescription := "my description string"
@@ -102,7 +102,7 @@ func TestCreateWithDescription(t *testing.T) {
 }
 
 func TestCreateProjectWithNilData(t *testing.T) {
-	cli := rundeck.NewClient(rundeck.DefaultConfig())
+	cli := rundeck.NewClient(nil)
 
 	project, err := cli.Projects().Create(nil)
 	if err == nil {
@@ -115,7 +115,7 @@ func TestCreateProjectWithNilData(t *testing.T) {
 }
 
 func TestGetProjectInfo(t *testing.T) {
-	cli := rundeck.NewClient(rundeck.DefaultConfig())
+	cli := rundeck.NewClient(nil)
 
 	name := "Test"
 
@@ -142,7 +142,7 @@ func TestGetProjectInfo(t *testing.T) {
 }
 
 func TestProjectDeletion(t *testing.T) {
-	cli := rundeck.NewClient(rundeck.DefaultConfig())
+	cli := rundeck.NewClient(nil)
 
 	name := "TestForDeletion"
 
@@ -157,7 +157,7 @@ func TestProjectDeletion(t *testing.T) {
 }
 
 func TestGetConfiguration(t *testing.T) {
-	cli := rundeck.NewClient(rundeck.DefaultConfig())
+	cli := rundeck.NewClient(nil)
 
 	name := "Test"
 
@@ -183,7 +183,7 @@ func TestGetConfiguration(t *testing.T) {
 }
 
 func TestConfigureExistingProject(t *testing.T) {
-	cli := rundeck.NewClient(rundeck.DefaultConfig())
+	cli := rundeck.NewClient(nil)
 
 	name := "Test"
 
@@ -220,7 +220,7 @@ func TestConfigureExistingProject(t *testing.T) {
 }
 
 func TestGetConfigurationKey(t *testing.T) {
-	cli := rundeck.NewClient(rundeck.DefaultConfig())
+	cli := rundeck.NewClient(nil)
 
 	name := "TestGetConfigKey"
 	description := "test get config key description"
@@ -258,7 +258,7 @@ func TestGetConfigurationKey(t *testing.T) {
 }
 
 func TestSetConfigurationKey(t *testing.T) {
-	cli := rundeck.NewClient(rundeck.DefaultConfig())
+	cli := rundeck.NewClient(nil)
 
 	name := "TestSetConfigKey"
 
@@ -292,7 +292,7 @@ func TestSetConfigurationKey(t *testing.T) {
 }
 
 func TestDeleteConfigKeyPair(t *testing.T) {
-	cli := rundeck.NewClient(rundeck.DefaultConfig())
+	cli := rundeck.NewClient(nil)
 
 	name := "TestForDeletingConfigKeyPair"
 	configKey := "config.to.delete"
@@ -321,6 +321,30 @@ func TestDeleteConfigKeyPair(t *testing.T) {
 	}
 
 	if err := cli.Projects().Delete(project.Name); err != nil {
+		t.Error("failed to delete project", err)
+	}
+}
+
+func TestListProjectResources(t *testing.T) {
+	cli := rundeck.NewClient(nil)
+
+	name := "Test"
+
+	projectInfo, err := cli.Projects().Create(&rundeck.CreateProjectInput{Name: name})
+	if err != nil {
+		t.Error("failed to create project", err)
+	}
+
+	resources, err := cli.Projects().ListResources(projectInfo.Name, map[string]string{"name": "ubuntu"})
+	if err != nil {
+		t.Error("resources were not nil", err)
+	}
+
+	if resources == nil || len(resources) < 1 {
+		t.Error("rundeck will always provide 1 resource - the OS", err)
+	}
+
+	if err := cli.Projects().Delete(projectInfo.Name); err != nil {
 		t.Error("failed to delete project", err)
 	}
 }
