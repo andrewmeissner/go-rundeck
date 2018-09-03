@@ -227,33 +227,32 @@ func (p *Projects) GetConfigKey(project, key string) (*ProjectConfigKeyPair, err
 }
 
 // SetConfigKey modifies the value
-func (p *Projects) SetConfigKey(project, key, value string) (map[string]string, error) {
-	rawURL := p.c.RundeckAddr + "/project/" + project + "/config/" + key
+func (p *Projects) SetConfigKey(project string, keyPair *ProjectConfigKeyPair) (*ProjectConfigKeyPair, error) {
+	if keyPair == nil {
+		return nil, errors.New("keyPair cannot be nil when setting a config key")
+	}
 
-	bs, err := json.Marshal(map[string]string{key: value})
+	bs, err := json.Marshal(keyPair)
 	if err != nil {
 		return nil, err
 	}
 
+	rawURL := p.c.RundeckAddr + "/project/" + project + "/config/" + keyPair.Key
 	res, err := p.c.checkResponseOK(p.c.put(rawURL, bytes.NewReader(bs)))
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
 
-	var result map[string]string
-	return result, json.NewDecoder(res.Body).Decode(&result)
+	var result ProjectConfigKeyPair
+	return &result, json.NewDecoder(res.Body).Decode(&result)
 }
 
 // DeleteConfigKey removes the key
 func (p *Projects) DeleteConfigKey(project, key string) error {
 	rawURL := p.c.RundeckAddr + "/project/" + project + "/config/" + key
-
 	_, err := p.c.checkResponseNoContent(p.c.delete(rawURL, nil))
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 // ArchiveExport exports a zip archive of the project synchronously

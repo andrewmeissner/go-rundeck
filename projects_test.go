@@ -256,3 +256,71 @@ func TestGetConfigurationKey(t *testing.T) {
 		t.Error("failed to delete project", err)
 	}
 }
+
+func TestSetConfigurationKey(t *testing.T) {
+	cli := rundeck.NewClient(rundeck.DefaultConfig())
+
+	name := "TestSetConfigKey"
+
+	project, err := cli.Projects().Create(&rundeck.CreateProjectInput{Name: name})
+	if err != nil {
+		t.Error("project creation failed for", name, err)
+	}
+
+	description := "setting the description"
+	newConfigKeyPair := rundeck.ProjectConfigKeyPair{
+		Key:   "project.description",
+		Value: description,
+	}
+
+	if _, err := cli.Projects().SetConfigKey(project.Name, nil); err == nil {
+		t.Error(err)
+	}
+
+	setConfigKeyPair, err := cli.Projects().SetConfigKey(project.Name, &newConfigKeyPair)
+	if err != nil {
+		t.Error("failed to set config key pair", err)
+	}
+
+	if newConfigKeyPair != *setConfigKeyPair {
+		t.Errorf("set and returned key pairs to not match")
+	}
+
+	if err := cli.Projects().Delete(project.Name); err != nil {
+		t.Error("project failed to delete", err)
+	}
+}
+
+func TestDeleteConfigKeyPair(t *testing.T) {
+	cli := rundeck.NewClient(rundeck.DefaultConfig())
+
+	name := "TestForDeletingConfigKeyPair"
+	configKey := "config.to.delete"
+
+	project, err := cli.Projects().Create(&rundeck.CreateProjectInput{
+		Name: name,
+		Config: map[string]string{
+			configKey: "delete me",
+		},
+	})
+	if err != nil {
+		t.Error("failed to create project", err)
+	}
+
+	if err := cli.Projects().DeleteConfigKey(project.Name, configKey); err != nil {
+		t.Error("failed to delete config key", configKey, err)
+	}
+
+	configuration, err := cli.Projects().Configuration(project.Name)
+	if err != nil {
+		t.Error("failed to get configuation from project", err)
+	}
+
+	if _, exists := configuration[configKey]; exists {
+		t.Error(configKey, " should not exist after deletion")
+	}
+
+	if err := cli.Projects().Delete(project.Name); err != nil {
+		t.Error("failed to delete project", err)
+	}
+}
