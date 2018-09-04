@@ -46,7 +46,7 @@ type ProjectConfigKeyPair struct {
 
 // ArchiveExportInput ...
 type ArchiveExportInput struct {
-	ExecutionIDs     []string
+	ExecutionIDs     []int
 	ExportAll        bool
 	ExportJobs       bool
 	ExportExecutions bool
@@ -62,17 +62,9 @@ type ArchiveExportAsyncStatusResponse struct {
 	Percentage int    `json:"int"`
 }
 
-// JobUUIDOption can either be remove or preserve
-type JobUUIDOption string
-
-const (
-	JobUUIDOptionRemove   JobUUIDOption = "remove"
-	JobUUIDOptionPreserve JobUUIDOption = "preserve"
-)
-
 // ArchiveImportInput are option parameters for importing a project archive
 type ArchiveImportInput struct {
-	JobUUIDOption    JobUUIDOption
+	JobUUIDOption    UUIDOption
 	ImportExecutions bool
 	ImportConfig     bool
 	ImportACL        bool
@@ -341,7 +333,7 @@ func (p *Projects) ArchiveImport(project string, content []byte, input *ArchiveI
 	query := uri.Query()
 
 	if input != nil {
-		if input.JobUUIDOption == JobUUIDOptionRemove || input.JobUUIDOption == JobUUIDOptionPreserve {
+		if input.JobUUIDOption == UUIDOptionRemove || input.JobUUIDOption == UUIDOptionPreserve {
 			query.Add("jobUuidOption", string(input.JobUUIDOption))
 		}
 
@@ -402,7 +394,7 @@ func (p *Projects) ListResources(project string, nodeFilters map[string]string) 
 func (p *Projects) encodeArchiveExportInput(query url.Values, input *ArchiveExportInput) string {
 	if input != nil {
 		if input.ExecutionIDs != nil && len(input.ExecutionIDs) > 0 {
-			query.Add("executionIds", strings.Join(input.ExecutionIDs, ","))
+			query.Add("executionIds", strings.Join(intSliceToStringSlice(input.ExecutionIDs), ","))
 		}
 
 		if input.ExportAcls {
