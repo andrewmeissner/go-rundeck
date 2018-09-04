@@ -9,31 +9,31 @@ import (
 // AdhocCommandStringInput ...
 type AdhocCommandStringInput struct {
 	Exec string `json:"exec"`
-	adhocOptions
+	AdhocOptions
 }
 
 // AdhocScriptInput ...
 type AdhocScriptInput struct {
 	Script string `json:"script"`
-	adhocOptions
-	adhocScriptOptions
+	AdhocOptions
+	AdhocScriptOptions
 }
 
 // AdhocURLInput ...
 type AdhocURLInput struct {
 	URL string `json:"url"`
-	adhocOptions
-	adhocScriptOptions
+	AdhocOptions
+	AdhocScriptOptions
 }
 
-type adhocScriptOptions struct {
+type AdhocScriptOptions struct {
 	ArgString             string `json:"argString,omitempty"`
 	ScriptInterpreter     string `json:"scriptInterpreter,omitempty"`
 	InterpreterArgsQuoted bool   `json:"interpreterArgsQuoted,omitempty"`
 	FileExtension         string `json:"fileExtension,omitempty"`
 }
 
-type adhocOptions struct {
+type AdhocOptions struct {
 	Project         string `json:"project"`
 	NodeThreadcount int    `json:"nodeThreadcount,omitempty"`
 	NodeKeepGoing   bool   `json:"nodeKeepgoing,omitempty"`
