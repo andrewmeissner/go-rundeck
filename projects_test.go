@@ -363,12 +363,124 @@ func TestSynchronousArchiveExport(t *testing.T) {
 		t.Error("project failed to create", name, err)
 	}
 
-	_, err = cli.Projects().ArchiveExport(project.Name, &rundeck.ArchiveExportInput{ExportAll: true})
+	adhocInput := rundeck.AdhocCommandStringInput{
+		Exec: "pwd",
+		AdhocOptions: rundeck.AdhocOptions{
+			Project: project.Name,
+		},
+	}
+	adhocResp, err := cli.Adhoc().RunCommandString(&adhocInput)
+	if err != nil {
+		t.Error("failed to run adhoc command", err)
+	}
+
+	exportInput := rundeck.ArchiveExportInput{
+		ExecutionIDs:     []int{adhocResp.Execution.ID},
+		ExportAcls:       true,
+		ExportAll:        true,
+		ExportConfigs:    true,
+		ExportExecutions: true,
+		ExportJobs:       true,
+		ExportReadmes:    true,
+	}
+	_, err = cli.Projects().ArchiveExport(project.Name, &exportInput)
 	if err != nil {
 		t.Error("failed to export all", err)
 	}
 
 	if err := cli.Projects().Delete(project.Name); err != nil {
 		t.Error("project failed to delete", err)
+	}
+}
+
+func TestProjectArchiveImport(t *testing.T) {
+	cli := rundeck.NewClient(nil)
+
+	name := "Test"
+	description := "test project for archive import"
+
+	project, err := cli.Projects().Create(&rundeck.CreateProjectInput{
+		Name:        name,
+		Description: description,
+	})
+	if err != nil {
+		t.Error("project creation failed", err)
+	}
+
+	content, err := cli.Projects().ArchiveExport(project.Name, &rundeck.ArchiveExportInput{ExportAll: true})
+	if err != nil {
+		t.Error("project export failed", err)
+	}
+
+	newProject, err := cli.Projects().Create(&rundeck.CreateProjectInput{
+		Name:        "Test-New",
+		Description: "new description",
+	})
+
+	response, err := cli.Projects().ArchiveImport(newProject.Name, content, &rundeck.ArchiveImportInput{
+		ImportACL:        true,
+		ImportConfig:     true,
+		ImportExecutions: true,
+		JobUUIDOption:    rundeck.UUIDOptionRemove,
+	})
+	if err != nil {
+		t.Error("failed to import archive to new project", err)
+	}
+
+	if response.ImportStatus != rundeck.StatusSuccessful {
+		t.Error("import failed", response.ImportStatus)
+		t.Error("acl errors:", response.ACLErrors)
+		t.Error("errors:", response.Errors)
+		t.Error("execution errors:", response.ExecutionErrors)
+	}
+
+	for _, projectName := range []string{project.Name, newProject.Name} {
+		if err := cli.Projects().Delete(projectName); err != nil {
+			t.Error("failed to delete project", projectName, err)
+		}
+	}
+}
+
+func TestAsyncArchiveExport(t *testing.T) {
+	cli := rundeck.NewClient(nil)
+
+	projectInput := rundeck.CreateProjectInput{
+		Name:        "Test",
+		Description: "test for asynchronous archive export",
+	}
+	project, err := cli.Projects().Create(&projectInput)
+	if err != nil {
+		t.Error("project creation failed", err)
+	}
+
+	archiveExportInput := rundeck.ArchiveExportInput{ExportAll: true}
+	asyncStatusResponse, err := cli.Projects().ArchiveExportAsync(project.Name, &archiveExportInput)
+	if err != nil {
+		t.Error("failed to initiate async archive export", err)
+	}
+	token := asyncStatusResponse.Token
+
+	// ensures the call is made at least one time
+	status, err := cli.Projects().ArchiveExportAsyncStatus(project.Name, token)
+	if err != nil {
+		t.Error("failed to get status from seconary call", err)
+	}
+
+	ready := status.Ready
+	for !ready {
+		s, err := cli.Projects().ArchiveExportAsyncStatus(project.Name, token)
+		if err != nil {
+			t.Error("failed to get status from call", err)
+		}
+		ready = s.Ready
+	}
+
+	_, err = cli.Projects().ArchiveExportAsyncDownload(project.Name, token)
+	if err != nil {
+		t.Error("failed to download async archive", err)
+	}
+
+	if err := cli.Projects().Delete(project.Name); err != nil {
+		t.Error("failed to delete project", err)
 	}
 }
