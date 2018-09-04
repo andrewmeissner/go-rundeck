@@ -1,0 +1,3084 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/andrewmeissner/go-rundeck/acl.go (0.0%)</option>
+				
+				<option value="file1">github.com/andrewmeissner/go-rundeck/adhoc.go (25.0%)</option>
+				
+				<option value="file2">github.com/andrewmeissner/go-rundeck/client.go (64.2%)</option>
+				
+				<option value="file3">github.com/andrewmeissner/go-rundeck/config.go (100.0%)</option>
+				
+				<option value="file4">github.com/andrewmeissner/go-rundeck/error.go (44.4%)</option>
+				
+				<option value="file5">github.com/andrewmeissner/go-rundeck/executions.go (0.0%)</option>
+				
+				<option value="file6">github.com/andrewmeissner/go-rundeck/jobs.go (0.0%)</option>
+				
+				<option value="file7">github.com/andrewmeissner/go-rundeck/key.go (0.0%)</option>
+				
+				<option value="file8">github.com/andrewmeissner/go-rundeck/logstorage.go (0.0%)</option>
+				
+				<option value="file9">github.com/andrewmeissner/go-rundeck/projects.go (86.3%)</option>
+				
+				<option value="file10">github.com/andrewmeissner/go-rundeck/scheduler.go (0.0%)</option>
+				
+				<option value="file11">github.com/andrewmeissner/go-rundeck/system.go (0.0%)</option>
+				
+				<option value="file12">github.com/andrewmeissner/go-rundeck/tokens.go (0.0%)</option>
+				
+				<option value="file13">github.com/andrewmeissner/go-rundeck/transport.go (100.0%)</option>
+				
+				<option value="file14">github.com/andrewmeissner/go-rundeck/users.go (0.0%)</option>
+				
+				<option value="file15">github.com/andrewmeissner/go-rundeck/utils.go (50.0%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package rundeck
+
+import (
+        "bytes"
+        "encoding/json"
+        "io/ioutil"
+        "strings"
+)
+
+const aclPolicySuffix = ".aclpolicy"
+
+// ListACLsResponse is the response body from the system/acl endpoint
+type ListACLsResponse struct {
+        Path      string         `json:"path"`
+        Type      string         `json:"type"`
+        HREF      string         `json:"href"`
+        Resources []*ACLResource `json:"resources"`
+}
+
+// ACLResource is an element in the resources portion of the ListACLsReponse payload.
+type ACLResource struct {
+        Path string `json:"path"`
+        Type string `json:"type"`
+        Name string `json:"name"`
+        HREF string `json:"href"`
+}
+
+// ACL in information about API submitted ACLs, not hard-disk ACLs
+type ACL struct {
+        c *Client
+}
+
+// ACL interacts with the ACL API
+func (c *Client) ACL() *ACL <span class="cov0" title="0">{
+        return &amp;ACL{c: c}
+}</span>
+
+// List returns an overview of the API submitted ACLs
+func (a *ACL) List() (*ListACLsResponse, error) <span class="cov0" title="0">{
+        url := a.c.RundeckAddr + "/system/acl/"
+
+        res, err := a.c.checkResponseOK(a.c.get(url))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        var listACLs ListACLsResponse
+        return &amp;listACLs, json.NewDecoder(res.Body).Decode(&amp;listACLs)</span>
+}
+
+// Get retrieves the YAML text of the ACL Policy file.  The contents of the file as a []byte will be returned.
+func (a *ACL) Get(name string) ([]byte, error) <span class="cov0" title="0">{
+        url := a.c.RundeckAddr + "/system/acl/" + a.sanitizeACLName(name)
+
+        res, err := a.c.checkResponseOK(a.c.getWithAdditionalHeaders(url, map[string]string{"Accept": "text/plain"}))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        return ioutil.ReadAll(res.Body)</span>
+}
+
+// Create is used to create an ACL policy
+func (a *ACL) Create(name string, policy []byte) error <span class="cov0" title="0">{
+        url := a.c.RundeckAddr + "/system/acl/" + a.sanitizeACLName(name)
+
+        res, err := a.c.checkResponseCreated(a.c.postWithAdditionalHeaders(url, map[string]string{"Content-Type": "text/plain"}, bytes.NewReader(policy)))
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        return nil</span>
+}
+
+// Update updates an existing acl policy
+func (a *ACL) Update(name string, policy []byte) error <span class="cov0" title="0">{
+        url := a.c.RundeckAddr + "/system/acl/" + a.sanitizeACLName(name)
+
+        res, err := a.c.checkResponseOK(a.c.putWithAdditionalHeaders(url, map[string]string{"Content-Type": "text/plain"}, bytes.NewReader(policy)))
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        return nil</span>
+}
+
+// Delete removes an ACL polciy file
+func (a *ACL) Delete(name string) error <span class="cov0" title="0">{
+        url := a.c.RundeckAddr + "/system/acl/" + a.sanitizeACLName(name)
+
+        res, err := a.c.checkResponseNoContent(a.c.delete(url, nil))
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        return nil</span>
+}
+
+func (a *ACL) sanitizeACLName(name string) string <span class="cov0" title="0">{
+        if !strings.HasSuffix(name, aclPolicySuffix) </span><span class="cov0" title="0">{
+                name += aclPolicySuffix
+        }</span>
+        <span class="cov0" title="0">return name</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package rundeck
+
+import (
+        "bytes"
+        "encoding/json"
+        "errors"
+)
+
+// AdhocCommandStringInput ...
+type AdhocCommandStringInput struct {
+        Exec string `json:"exec"`
+        AdhocOptions
+}
+
+// AdhocScriptInput ...
+type AdhocScriptInput struct {
+        Script string `json:"script"`
+        AdhocOptions
+        AdhocScriptOptions
+}
+
+// AdhocURLInput ...
+type AdhocURLInput struct {
+        URL string `json:"url"`
+        AdhocOptions
+        AdhocScriptOptions
+}
+
+type AdhocScriptOptions struct {
+        ArgString             string `json:"argString,omitempty"`
+        ScriptInterpreter     string `json:"scriptInterpreter,omitempty"`
+        InterpreterArgsQuoted bool   `json:"interpreterArgsQuoted,omitempty"`
+        FileExtension         string `json:"fileExtension,omitempty"`
+}
+
+type AdhocOptions struct {
+        Project         string `json:"project"`
+        NodeThreadcount int    `json:"nodeThreadcount,omitempty"`
+        NodeKeepGoing   bool   `json:"nodeKeepgoing,omitempty"`
+        AsUser          string `json:"asUser,omitempty"`
+        Filter          string `json:"filter,omitempty"`
+}
+
+// AdhocCommandResponse ...
+type AdhocCommandResponse struct {
+        Message   string    `json:"message"`
+        Execution Execution `json:"execution"`
+}
+
+// AdhocAPI interacts with the adhoc endpoints
+type AdhocAPI struct {
+        c *Client
+}
+
+// Adhoc restuns and adhoc api client
+func (c *Client) Adhoc() *AdhocAPI <span class="cov8" title="1">{
+        return &amp;AdhocAPI{c: c}
+}</span>
+
+// RunCommandString runs an adhoc command
+func (a *AdhocAPI) RunCommandString(input *AdhocCommandStringInput) (*AdhocCommandResponse, error) <span class="cov8" title="1">{
+        if input == nil </span><span class="cov0" title="0">{
+                return nil, errors.New("input cannot be nil")
+        }</span>
+
+        <span class="cov8" title="1">if input.Project == "" </span><span class="cov0" title="0">{
+                return nil, errors.New("input.Project cannot be empty")
+        }</span>
+
+        <span class="cov8" title="1">if input.Exec == "" </span><span class="cov0" title="0">{
+                return nil, errors.New("input.Exec cannot be empty")
+        }</span>
+
+        <span class="cov8" title="1">rawURL := a.c.RundeckAddr + "/project/" + input.Project + "/run/command"
+
+        bs, err := json.Marshal(input)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="1">res, err := a.c.checkResponseOK(a.c.post(rawURL, bytes.NewReader(bs)))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">defer res.Body.Close()
+
+        var output AdhocCommandResponse
+        return &amp;output, json.NewDecoder(res.Body).Decode(&amp;output)</span>
+}
+
+// RunScript runs a script
+func (a *AdhocAPI) RunScript(input *AdhocScriptInput) (*AdhocCommandResponse, error) <span class="cov0" title="0">{
+        if input == nil </span><span class="cov0" title="0">{
+                return nil, errors.New("input cannot be nil")
+        }</span>
+
+        <span class="cov0" title="0">if input.Project == "" </span><span class="cov0" title="0">{
+                return nil, errors.New("input.Project cannot be empty")
+        }</span>
+
+        <span class="cov0" title="0">if input.Script == "" </span><span class="cov0" title="0">{
+                return nil, errors.New("input.Script cannot be empty")
+        }</span>
+
+        <span class="cov0" title="0">rawURL := a.c.RundeckAddr + "/project/" + input.Project + "/run/script"
+
+        bs, err := json.Marshal(input)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">res, err := a.c.checkResponseOK(a.c.post(rawURL, bytes.NewReader(bs)))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        var output AdhocCommandResponse
+        return &amp;output, json.NewDecoder(res.Body).Decode(&amp;output)</span>
+}
+
+// RunURL runs a script downloaded from a url
+func (a *AdhocAPI) RunURL(input *AdhocURLInput) (*AdhocCommandResponse, error) <span class="cov0" title="0">{
+        if input == nil </span><span class="cov0" title="0">{
+                return nil, errors.New("input cannot be nil")
+        }</span>
+
+        <span class="cov0" title="0">if input.Project == "" </span><span class="cov0" title="0">{
+                return nil, errors.New("input.Project cannot be empty")
+        }</span>
+
+        <span class="cov0" title="0">if input.URL == "" </span><span class="cov0" title="0">{
+                return nil, errors.New("input.URL cannot be empty")
+        }</span>
+
+        <span class="cov0" title="0">rawURL := a.c.RundeckAddr + "/project/" + input.Project + "/run/url"
+
+        bs, err := json.Marshal(input)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">res, err := a.c.checkResponseOK(a.c.post(rawURL, bytes.NewReader(bs)))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">var output AdhocCommandResponse
+        return &amp;output, json.NewDecoder(res.Body).Decode(&amp;output)</span>
+}
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package rundeck
+
+import (
+        "io"
+        "net/http"
+        "strconv"
+        "strings"
+)
+
+// Client is the basic client that interacts with the Rundeck API.
+type Client struct {
+        Config      *Config
+        client      *http.Client
+        RundeckAddr string
+}
+
+// NewClient returns a rundeck client
+//
+// If config is nil, then the configuration from DefaultConfig() will be used.
+// DefaultConfig() assumes that the environment variable RUNDECK_TOKEN is set, and
+// that its value is a valid Rundeck API token.
+func NewClient(config *Config) *Client <span class="cov8" title="1">{
+        if config == nil </span><span class="cov8" title="1">{
+                config = DefaultConfig()
+        }</span>
+
+        <span class="cov8" title="1">return &amp;Client{
+                Config: config,
+                client: &amp;http.Client{
+                        Jar: http.DefaultClient.Jar,
+                        Transport: &amp;rundeckTransport{
+                                apiToken:            config.RundeckAuthToken,
+                                underlyingTransport: http.DefaultTransport,
+                        },
+                },
+                RundeckAddr: sanitizeAddr(config.ServerURL) + "/api/" + strconv.Itoa(config.APIVersion),
+        }</span>
+}
+
+// SetAPIToken will update the token (and associated client transport for the API calls)
+func (c *Client) SetAPIToken(token string) <span class="cov0" title="0">{
+        c.Config.RundeckAuthToken = token
+        c.client = &amp;http.Client{
+                Jar: http.DefaultClient.Jar,
+                Transport: &amp;rundeckTransport{
+                        apiToken:            c.Config.RundeckAuthToken,
+                        underlyingTransport: http.DefaultTransport,
+                },
+        }
+}</span>
+
+// sanitizeAddr will remove all trailing slashes from the supplied ServerURL to ensure path correctness
+func sanitizeAddr(addr string) string <span class="cov8" title="1">{
+        for strings.HasSuffix(addr, "/") </span><span class="cov0" title="0">{
+                addr = strings.TrimSuffix(addr, "/")
+        }</span>
+        <span class="cov8" title="1">return addr</span>
+}
+
+func (c *Client) get(url string) (*http.Response, error) <span class="cov8" title="1">{
+        req, err := http.NewRequest(http.MethodGet, url, nil)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="1">return c.client.Do(req)</span>
+}
+
+func (c *Client) getWithAdditionalHeaders(url string, headers map[string]string) (*http.Response, error) <span class="cov0" title="0">{
+        req, err := http.NewRequest(http.MethodGet, url, nil)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">c.addHeaders(req, headers)
+
+        return c.client.Do(req)</span>
+}
+
+func (c *Client) post(url string, body io.Reader) (*http.Response, error) <span class="cov8" title="1">{
+        req, err := http.NewRequest(http.MethodPost, url, body)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="1">return c.client.Do(req)</span>
+}
+
+func (c *Client) postWithAdditionalHeaders(url string, headers map[string]string, body io.Reader) (*http.Response, error) <span class="cov0" title="0">{
+        req, err := http.NewRequest(http.MethodPost, url, body)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">c.addHeaders(req, headers)
+
+        return c.client.Do(req)</span>
+}
+
+func (c *Client) put(url string, body io.Reader) (*http.Response, error) <span class="cov8" title="1">{
+        req, err := http.NewRequest(http.MethodPut, url, body)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="1">return c.client.Do(req)</span>
+}
+
+func (c *Client) putWithAdditionalHeaders(url string, headers map[string]string, body io.Reader) (*http.Response, error) <span class="cov8" title="1">{
+        req, err := http.NewRequest(http.MethodPut, url, body)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="1">c.addHeaders(req, headers)
+
+        return c.client.Do(req)</span>
+}
+
+func (c *Client) delete(url string, body io.Reader) (*http.Response, error) <span class="cov8" title="1">{
+        req, err := http.NewRequest(http.MethodDelete, url, body)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="1">return c.client.Do(req)</span>
+}
+
+func (c *Client) addHeaders(req *http.Request, headers map[string]string) <span class="cov8" title="1">{
+        for k, v := range headers </span><span class="cov8" title="1">{
+                req.Header.Add(k, v)
+        }</span>
+}
+
+func (c *Client) convertFiltersToSerializeableFormat(filters map[string]string) string <span class="cov8" title="1">{
+        var fs []string
+        for k, v := range filters </span><span class="cov8" title="1">{
+                fs = append(fs, k+": "+v)
+        }</span>
+        <span class="cov8" title="1">return strings.Join(fs, " ")</span>
+}
+
+func (c *Client) checkResponseOK(res *http.Response, err error) (*http.Response, error) <span class="cov8" title="1">{
+        return c.checkResponse(res, http.StatusOK, err)
+}</span>
+
+func (c *Client) checkResponseCreated(res *http.Response, err error) (*http.Response, error) <span class="cov8" title="1">{
+        return c.checkResponse(res, http.StatusCreated, err)
+}</span>
+
+func (c *Client) checkResponseNoContent(res *http.Response, err error) (*http.Response, error) <span class="cov8" title="1">{
+        return c.checkResponse(res, http.StatusNoContent, err)
+}</span>
+
+func (c *Client) checkResponse(res *http.Response, statusCode int, err error) (*http.Response, error) <span class="cov8" title="1">{
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">if res.StatusCode != statusCode </span><span class="cov8" title="1">{
+                return nil, makeError(res.Body)
+        }</span>
+        <span class="cov8" title="1">return res, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package rundeck
+
+import "os"
+
+const (
+        // APIVersion24 is defaulted to the specified api version
+        APIVersion24 = 24
+
+        // EnvRundeckToken sets the name of the environment variable to read
+        EnvRundeckToken = "RUNDECK_TOKEN"
+
+        // EnvRundeckServerURL is the name of the environment variable for the server url
+        EnvRundeckServerURL = "RUNDECK_SERVER_URL"
+
+        localRundeckURL = "http://localhost:4440"
+)
+
+// Config is the basic configuration needed by the client to communicate with Rundeck
+type Config struct {
+        // ServerURL is expected in the given format, ie: http://localhost:4440, or https://my.rundeck.com.
+        ServerURL string
+
+        // APIVersion is the version of the api you want to use.
+        APIVersion int
+
+        // RundeckAuthToken is the authentication token used to communicate with Rundeck
+        RundeckAuthToken string
+}
+
+// DefaultConfig implements a localhost basic configuration, relying on and assuming a valid api token
+// set in the environment variable RUNDECK_TOKEN.
+//
+// The environment variable RUNDECK_SERVER_URL will be used if it is present,
+// otherwise http://localhost:4440 will be used as the server url.
+func DefaultConfig() *Config <span class="cov8" title="1">{
+        serverURL := os.Getenv(EnvRundeckServerURL)
+        if serverURL == "" </span><span class="cov8" title="1">{
+                serverURL = localRundeckURL
+        }</span>
+
+        <span class="cov8" title="1">return &amp;Config{
+                APIVersion:       APIVersion24,
+                RundeckAuthToken: os.Getenv(EnvRundeckToken),
+                ServerURL:        serverURL,
+        }</span>
+}
+</pre>
+		
+		<pre class="file" id="file4" style="display: none">package rundeck
+
+import (
+        "encoding/json"
+        "io"
+)
+
+// Error is what Rundeck returns given a bad API call
+type Error struct {
+        ErrorPresent bool   `json:"error"`
+        APIVersion   int    `json:"apiversion"`
+        ErrorCode    string `json:"errorCode"`
+        Message      string `json:"message"`
+}
+
+// Error marshals the struct into a json string
+func (e Error) Error() string <span class="cov0" title="0">{
+        bs, err := json.Marshal(e)
+        if err != nil </span><span class="cov0" title="0">{
+                return err.Error()
+        }</span>
+        <span class="cov0" title="0">return string(bs)</span>
+}
+
+func makeError(body io.Reader) Error <span class="cov8" title="1">{
+        var err Error
+        goErr := json.NewDecoder(body).Decode(&amp;err)
+        if goErr != nil </span><span class="cov0" title="0">{
+                return Error{
+                        ErrorPresent: true,
+                        APIVersion:   -1,
+                        ErrorCode:    "decode.failure",
+                        Message:      goErr.Error(),
+                }
+        }</span>
+        <span class="cov8" title="1">return err</span>
+}
+</pre>
+		
+		<pre class="file" id="file5" style="display: none">package rundeck
+
+import (
+        "bytes"
+        "encoding/json"
+        "fmt"
+        "net/url"
+        "strconv"
+        "time"
+)
+
+// ExecutionStatus ensure a constant is used in parameters
+type ExecutionStatus string
+
+const (
+        ExecutionStatusRunning         ExecutionStatus = "running"
+        ExecutionStatusSucceeded       ExecutionStatus = "succeeded"
+        ExecutionStatusFailed          ExecutionStatus = "failed"
+        ExecutionStatusAborted         ExecutionStatus = "aborted"
+        ExecutionStatusTimedout        ExecutionStatus = "timedout"
+        ExecutionStatusFailedWithRetry ExecutionStatus = "failed-with-retry"
+        ExecutionStatusScheduled       ExecutionStatus = "scheduled"
+        ExecutionStatusOther           ExecutionStatus = "other"
+)
+
+// ExecutionType ensure a constant is used in parameters
+type ExecutionType string
+
+const (
+        ExecutionTypeScheduled     ExecutionType = "scheduled"
+        ExecutionTypeUser          ExecutionType = "user"
+        ExecutionTypeUserScheduled ExecutionType = "user-scheduled"
+)
+
+// Boolean often times have more than 2 values
+type Boolean int
+
+const (
+        BooleanDefault Boolean = iota
+        BooleanFalse
+        BooleanTrue
+)
+
+// ExecutionState is the state of the execution
+type ExecutionState string
+
+const (
+        ExecutionStateWaiting              ExecutionState = "WAITING"
+        ExecutionStateRunning              ExecutionState = "RUNNING"
+        ExecutionStateRunningHandler       ExecutionState = "RUNNING_HANDLER"
+        ExecutionStateSucceeded            ExecutionState = "SUCCEEDED"
+        ExecutionStateFailed               ExecutionState = "FAILED"
+        ExecutionStateAborted              ExecutionState = "ABORTED"
+        ExecutionStateNodePartialSucceeded ExecutionState = "NODE_PARTIAL_SUCCEEDED"
+        ExecutionStateNodeMixed            ExecutionState = "NODE_MIXED"
+        ExecutionStateNotStarted           ExecutionState = "NOT_STARTED"
+)
+
+// Execution is information regarding an execution
+type Execution struct {
+        ID              int                `json:"id"`
+        HREF            string             `json:"href"`
+        Permalink       string             `json:"permalink"`
+        Status          string             `json:"status"`
+        CustomStatus    string             `json:"customStatus"`
+        Project         string             `json:"project"`
+        User            string             `json:"user"`
+        ServerUUID      string             `json:"serverUUID"`
+        DateStarted     ExecutionTimestamp `json:"date-started"`
+        DateEnded       ExecutionTimestamp `json:"date-ended"`
+        Job             Job                `json:"job"`
+        Description     string             `json:"description"`
+        ArgString       string             `json:"argstring"`
+        Storage         LogStorageMetadata `json:"storage"`
+        SuccessfulNodes []string           `json:"successfulNodes"`
+        FailedNodes     []string           `json:"failedNodes"`
+        Errors          []string           `json:"errors"`
+}
+
+// ExecutionTimestamp is basic time metadata
+type ExecutionTimestamp struct {
+        UnixTime int64     `json:"unixtime"`
+        Date     time.Time `json:"date"`
+}
+
+// ExecutionsResponse contains paging information as well as executions
+type ExecutionsResponse struct {
+        PagingInfo
+        Executions []*Execution `json:"executions"`
+}
+
+// DeleteExecutionsResponse contains information about the success and failures of the delete operation
+type DeleteExecutionsResponse struct {
+        Failures []struct {
+                ID      string `json:"id"`
+                Message string `json:"message"`
+        } `json:"failures"`
+        FailedCount   int  `json:"failedCount"`
+        SuccessCount  int  `json:"successCount"`
+        AllSuccessful bool `json:"allsuccessful"`
+        RequestCount  int  `json:"requestCount"`
+}
+
+// ExecutionQueryInput are parameters to narrow down the result set of a query operation
+type ExecutionQueryInput struct {
+        PagingInfo
+        Status                ExecutionStatus
+        AbortedBy             string
+        User                  string
+        RecentFilter          string
+        OlderFilter           string
+        Begin                 *time.Time // unix ms
+        End                   *time.Time // unix ms
+        AdHoc                 Boolean
+        JobIDList             []string
+        ExcludeJobIDList      []string
+        JobList               []string
+        ExcludeJobList        []string
+        GroupPath             string
+        GroupPathExact        string
+        ExcludeGroupPath      string
+        ExcludeGroupPathExact string
+        JobName               string
+        ExcludeJobName        string
+        JobNameExact          string
+        ExcludeJobNameExact   string
+        ExecutionType         ExecutionType
+}
+
+// ExecutionStateInfo ...
+type ExecutionStateInfo struct {
+        StartTime      time.Time      `json:"startTime"`
+        EndTime        time.Time      `json:"endTime"`
+        UpdateTime     time.Time      `json:"updateTime"`
+        ExecutionState ExecutionState `json:"executionState"`
+}
+
+// ExecutionWorkflow ...
+type ExecutionWorkflow struct {
+        StepCount   int                  `json:"stepCount"`
+        TargetNodes []string             `json:"targetNodes"`
+        Steps       []ExecutionStepState `json:"steps"`
+}
+
+// ExecutionStateIndicator ...
+type ExecutionStateIndicator struct {
+        ExecutionState        ExecutionState `json:"executionState"`
+        StepContextIdentifier string         `json:"stepctx"`
+}
+
+// ExecutionStepState ...
+type ExecutionStepState struct {
+        ExecutionStateInfo
+        ID                    string                        `json:"id"`
+        StepContextIdentifier string                        `json:"stepctx"`
+        NodeStep              bool                          `json:"nodeStep"`
+        NodeStates            map[string]ExecutionStateInfo `json:"nodeStates"`
+        HasSubworkflow        bool                          `json:"hasSubworkflow"`
+        Workflow              ExecutionWorkflow             `json:"workflow"`
+}
+
+// ExecutionStateResponse ...
+type ExecutionStateResponse struct {
+        ExecutionStateInfo
+        ExecutionWorkflow
+        AllNodes    []string                           `json:"allNodes"`
+        Nodes       map[string]ExecutionStateIndicator `json:"nodes"`
+        ServerNode  string                             `json:"serverNode"`
+        ExecutionID int                                `json:"executionId"`
+        Completed   bool                               `json:"completed"`
+}
+
+// ExecutionsOutputInput ...
+type ExecutionsOutputInput struct {
+        Node        string
+        StepContext string
+        Offset      int
+        LastLines   int
+        LastMod     *time.Time
+        Compacted   bool
+}
+
+// ExecutionsOutputResponse ...
+type ExecutionsOutputResponse struct {
+        ID             int            `json:"id"`
+        Message        string         `json:"message"`
+        Error          string         `json:"error"`
+        Unmodified     bool           `json:"unmodified"`
+        Empty          bool           `json:"empty"`
+        Offset         int            `json:"offset"`
+        Completed      bool           `json:"completed"`
+        ExecCompleted  bool           `json:"execCompleted"`
+        HasFailedNodes bool           `json:"hasFailedNodes"`
+        ExecutionState ExecutionState `json:"execState"`
+        LastModified   int64          `json:"lastModified"`
+        ExecDuration   int64          `json:"execDuration"`
+        PercentLoaded  float32        `json:"percentLoaded"`
+        TotalSize      int            `json:"totalSize"`
+        // Filter?  NodeName StepContext?
+        Compacted     bool        `json:"compacted"`
+        CompactedAttr string      `json:"compactedAttr"`
+        Entries       []*LogEntry `json:"entries"`
+}
+
+// LogEntry ...
+type LogEntry struct {
+        Time         string       `json:"time"`
+        AbsoluteTime *time.Time   `json:"absolute_time"`
+        Level        LogLevel     `json:"level"`
+        Log          string       `json:"log"`
+        User         string       `json:"user"`
+        Command      string       `json:"command"`
+        Node         string       `json:"node"`
+        StepContext  string       `json:"stepctx"`
+        Type         LogEntryType `json:"type"`
+}
+
+// LogEntryType ...
+type LogEntryType string
+
+const (
+        LogEntryTypeLog       LogEntryType = "log"
+        LogEntryTypeStepBegin LogEntryType = "stepbegin"
+        LogEntryTypeStepEnd   LogEntryType = "stepend"
+        LogEntryTypeNodeBegin LogEntryType = "nodebegin"
+        LogEntryTypeNodeEnd   LogEntryType = "nodeend"
+)
+
+// AbortExecutionResponse ...
+type AbortExecutionResponse struct {
+        Abort     Abort     `json:"abort"`
+        Execution Execution `json:"execution"`
+}
+
+// Abort contains the state and reason for the abort
+type Abort struct {
+        Status AbortState `json:"status"`
+        Reason string     `json:"reason"`
+}
+
+// AbortState will be one of "pending", "failed", or "aborted"
+type AbortState string
+
+const (
+        AbortStatePending AbortState = "pending"
+        AbortStateFailed  AbortState = "failed"
+        AbortStateAborted AbortState = "aborted"
+)
+
+// Executions is information pertaining to executions API endpoints
+type Executions struct {
+        c *Client
+}
+
+// Executions interacts with endpoints pertaining to executions
+func (c *Client) Executions() *Executions <span class="cov0" title="0">{
+        return &amp;Executions{c: c}
+}</span>
+
+// GetExecutionsForAJob returns the executions pertaining to a certain job
+func (e *Executions) GetExecutionsForAJob(id int, status *string, paging *PagingInfo) (*ExecutionsResponse, error) <span class="cov0" title="0">{
+        rawURL := fmt.Sprintf("%s/job/%d/executions", e.c.RundeckAddr, id)
+
+        uri, err := url.Parse(rawURL)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">query := uri.Query()
+
+        if status != nil </span><span class="cov0" title="0">{
+                query.Add("status", stringValue(status))
+        }</span>
+
+        <span class="cov0" title="0">if paging != nil </span><span class="cov0" title="0">{
+                if paging.Max != 0 </span><span class="cov0" title="0">{
+                        query.Add("max", strconv.FormatInt(int64(paging.Max), 10))
+                }</span>
+
+                <span class="cov0" title="0">if paging.Offset != 0 </span><span class="cov0" title="0">{
+                        query.Add("offset", strconv.FormatInt(int64(paging.Offset), 10))
+                }</span>
+        }
+
+        <span class="cov0" title="0">uri.RawQuery = query.Encode()
+
+        res, err := e.c.checkResponseOK(e.c.get(uri.String()))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        var executions ExecutionsResponse
+        return &amp;executions, json.NewDecoder(res.Body).Decode(&amp;executions)</span>
+}
+
+// DeleteExecutions deletes all executions for a job
+func (e *Executions) DeleteExecutions(id int) (*DeleteExecutionsResponse, error) <span class="cov0" title="0">{
+        rawURL := fmt.Sprintf("%s/job/%d/executions", e.c.RundeckAddr, id)
+
+        res, err := e.c.checkResponseOK(e.c.delete(rawURL, nil))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        var response DeleteExecutionsResponse
+        return &amp;response, json.NewDecoder(res.Body).Decode(&amp;response)</span>
+}
+
+// ListRunningExecutions returns running exeuctions for the specified project ("*" for all projects)
+func (e *Executions) ListRunningExecutions(project string) (*ExecutionsResponse, error) <span class="cov0" title="0">{
+        rawURL := e.c.RundeckAddr + "/project/" + project + "/executions/running"
+
+        res, err := e.c.checkResponseOK(e.c.get(rawURL))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        var executions ExecutionsResponse
+        return &amp;executions, json.NewDecoder(res.Body).Decode(&amp;executions)</span>
+}
+
+// Info returns information about the specific execution
+func (e *Executions) Info(id int) (*Execution, error) <span class="cov0" title="0">{
+        rawURL := e.c.RundeckAddr + "/exeuction/" + strconv.FormatInt(int64(id), 10)
+
+        res, err := e.c.checkResponseOK(e.c.get(rawURL))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        var execution Execution
+        return &amp;execution, json.NewDecoder(res.Body).Decode(&amp;execution)</span>
+}
+
+// ListInputFiles lists input ifle sused for an execution
+func (e *Executions) ListInputFiles(id int) (*UploadedFilesResponse, error) <span class="cov0" title="0">{
+        rawURL := e.c.RundeckAddr + "/execution/" + strconv.FormatInt(int64(id), 10) + "/input/files"
+
+        res, err := e.c.checkResponseOK(e.c.get(rawURL))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        var files UploadedFilesResponse
+        return &amp;files, json.NewDecoder(res.Body).Decode(&amp;files)</span>
+}
+
+// Delete deletes an execution by id
+func (e *Executions) Delete(id int) error <span class="cov0" title="0">{
+        rawURL := e.c.RundeckAddr + "/execution/" + strconv.FormatInt(int64(id), 10)
+
+        res, err := e.c.checkResponseNoContent(e.c.delete(rawURL, nil))
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        return nil</span>
+}
+
+// BulkDelete deletes a set of executions by their ids
+func (e *Executions) BulkDelete(ids []int) (*DeleteExecutionsResponse, error) <span class="cov0" title="0">{
+        rawURL := e.c.RundeckAddr + "/executions/delete"
+
+        bs, err := json.Marshal(ids)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">res, err := e.c.checkResponseOK(e.c.delete(rawURL, bytes.NewReader(bs)))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        var bulkResponse DeleteExecutionsResponse
+        return &amp;bulkResponse, json.NewDecoder(res.Body).Decode(&amp;bulkResponse)</span>
+}
+
+// Query queries for executions based on job or execution details
+func (e *Executions) Query(project string, input *ExecutionQueryInput) (*ExecutionsResponse, error) <span class="cov0" title="0">{
+        rawURL := e.c.RundeckAddr + "/project/" + project + "/executions"
+
+        uri, err := url.Parse(rawURL)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">query := uri.Query()
+
+        if input != nil </span><span class="cov0" title="0">{
+                if input.AbortedBy != "" </span><span class="cov0" title="0">{
+                        query.Add("abortedByFilter", input.AbortedBy)
+                }</span>
+
+                <span class="cov0" title="0">if input.AdHoc == BooleanFalse </span><span class="cov0" title="0">{
+                        query.Add("adhoc", "false")
+                }</span> else<span class="cov0" title="0"> if input.AdHoc == BooleanTrue </span><span class="cov0" title="0">{
+                        query.Add("adhoc", "true")
+                }</span>
+
+                <span class="cov0" title="0">if input.Begin != nil </span><span class="cov0" title="0">{
+                        query.Add("begin", strconv.FormatInt(input.Begin.Unix(), 10))
+                }</span>
+
+                <span class="cov0" title="0">if input.End != nil </span><span class="cov0" title="0">{
+                        query.Add("end", strconv.FormatInt(input.End.Unix(), 10))
+                }</span>
+
+                <span class="cov0" title="0">if input.ExcludeGroupPath != "" </span><span class="cov0" title="0">{
+                        query.Add("excludeGroupPath", input.ExcludeGroupPath)
+                }</span>
+
+                <span class="cov0" title="0">if input.ExcludeGroupPathExact != "" </span><span class="cov0" title="0">{
+                        query.Add("excludeGroupPathExact", input.ExcludeGroupPathExact)
+                }</span>
+
+                <span class="cov0" title="0">if input.ExcludeJobList != nil &amp;&amp; len(input.ExcludeJobList) &gt; 0 </span><span class="cov0" title="0">{
+                        for i := range input.ExcludeJobList </span><span class="cov0" title="0">{
+                                query.Add("excludeJobListFilter", input.ExcludeJobList[i])
+                        }</span>
+                }
+
+                <span class="cov0" title="0">if input.ExcludeJobIDList != nil &amp;&amp; len(input.ExcludeJobIDList) &gt; 0 </span><span class="cov0" title="0">{
+                        for i := range input.ExcludeJobIDList </span><span class="cov0" title="0">{
+                                query.Add("excludeJobIdListFilter", input.ExcludeJobIDList[i])
+                        }</span>
+                }
+
+                <span class="cov0" title="0">if input.ExcludeJobList != nil &amp;&amp; len(input.ExcludeJobList) &gt; 0 </span><span class="cov0" title="0">{
+                        for i := range input.ExcludeJobList </span><span class="cov0" title="0">{
+                                query.Add("excludeJobListFilter", input.ExcludeJobList[i])
+                        }</span>
+                }
+
+                <span class="cov0" title="0">if input.ExcludeJobName != "" </span><span class="cov0" title="0">{
+                        query.Add("excludeJobFilter", input.ExcludeJobName)
+                }</span>
+
+                <span class="cov0" title="0">if input.ExcludeJobNameExact != "" </span><span class="cov0" title="0">{
+                        query.Add("excludeJobExactFilter", input.ExcludeJobNameExact)
+                }</span>
+
+                <span class="cov0" title="0">if input.ExecutionType != "" </span><span class="cov0" title="0">{
+                        query.Add("executionTypeFilter", string(input.ExecutionType))
+                }</span>
+
+                <span class="cov0" title="0">if input.GroupPath != "" </span><span class="cov0" title="0">{
+                        query.Add("groupPath", input.GroupPath)
+                }</span>
+
+                <span class="cov0" title="0">if input.GroupPathExact != "" </span><span class="cov0" title="0">{
+                        query.Add("groupPathExact", input.GroupPathExact)
+                }</span>
+
+                <span class="cov0" title="0">if input.JobIDList != nil &amp;&amp; len(input.JobIDList) &gt; 0 </span><span class="cov0" title="0">{
+                        for i := range input.JobIDList </span><span class="cov0" title="0">{
+                                query.Add("jobIdListFilter", input.JobIDList[i])
+                        }</span>
+                }
+
+                <span class="cov0" title="0">if input.JobList != nil &amp;&amp; len(input.JobList) &gt; 0 </span><span class="cov0" title="0">{
+                        for i := range input.JobList </span><span class="cov0" title="0">{
+                                query.Add("jobListFilter", input.JobList[i])
+                        }</span>
+                }
+
+                <span class="cov0" title="0">if input.JobName != "" </span><span class="cov0" title="0">{
+                        query.Add("jobFilter", input.JobName)
+                }</span>
+
+                <span class="cov0" title="0">if input.JobNameExact != "" </span><span class="cov0" title="0">{
+                        query.Add("jobExactFilter", input.JobNameExact)
+                }</span>
+
+                <span class="cov0" title="0">if input.Max != 0 </span><span class="cov0" title="0">{
+                        query.Add("max", strconv.FormatInt(int64(input.Max), 10))
+                }</span>
+
+                <span class="cov0" title="0">if input.Offset != 0 </span><span class="cov0" title="0">{
+                        query.Add("offset", strconv.FormatInt(int64(input.Offset), 10))
+                }</span>
+
+                <span class="cov0" title="0">if input.OlderFilter != "" </span><span class="cov0" title="0">{
+                        query.Add("olderFilter", input.OlderFilter)
+                }</span>
+
+                <span class="cov0" title="0">if input.RecentFilter != "" </span><span class="cov0" title="0">{
+                        query.Add("recentFilter", input.RecentFilter)
+                }</span>
+
+                <span class="cov0" title="0">if input.Status != "" </span><span class="cov0" title="0">{
+                        query.Add("statusFilter", string(input.Status))
+                }</span>
+
+                <span class="cov0" title="0">if input.User != "" </span><span class="cov0" title="0">{
+                        query.Add("userFilter", input.User)
+                }</span>
+        }
+
+        <span class="cov0" title="0">uri.RawQuery = query.Encode()
+
+        res, err := e.c.checkResponseOK(e.c.get(uri.String()))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        var executions ExecutionsResponse
+        return &amp;executions, json.NewDecoder(res.Body).Decode(&amp;executions)</span>
+}
+
+// State gets detailed about the node and step state of an execution by ID. The execution can be currently running or completed.
+func (e *Executions) State(id int) (*ExecutionStateResponse, error) <span class="cov0" title="0">{
+        rawURL := fmt.Sprintf("%s/execution/%d/state", e.c.RundeckAddr, id)
+
+        res, err := e.c.checkResponseOK(e.c.get(rawURL))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        var esr ExecutionStateResponse
+        return &amp;esr, json.NewDecoder(res.Body).Decode(&amp;esr)</span>
+}
+
+// Output gets the output for an execution by ID.
+// The execution can be currently running or may have already completed.
+// Output can be filtered down to a specific node or workflow step.
+func (e *Executions) Output(id int, input *ExecutionsOutputInput) (*ExecutionsOutputResponse, error) <span class="cov0" title="0">{
+        rawURL := fmt.Sprintf("%s/execution/%d/output", e.c.RundeckAddr, id)
+
+        uri, err := url.Parse(rawURL)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">query := uri.Query()
+
+        if input != nil </span><span class="cov0" title="0">{
+                if input.Node != "" </span><span class="cov0" title="0">{
+                        uri.Path += "/node/" + input.Node
+                }</span>
+
+                <span class="cov0" title="0">if input.StepContext != "" </span><span class="cov0" title="0">{
+                        uri.Path += "/step/" + input.StepContext
+                }</span>
+
+                <span class="cov0" title="0">if input.Compacted </span><span class="cov0" title="0">{
+                        query.Add("compacted", "true")
+                }</span>
+
+                <span class="cov0" title="0">if input.LastLines != 0 </span><span class="cov0" title="0">{
+                        query.Add("lastlines", strconv.FormatInt(int64(input.LastLines), 10))
+                }</span>
+
+                <span class="cov0" title="0">if input.LastMod != nil </span><span class="cov0" title="0">{
+                        query.Add("lastmod", strconv.FormatInt(int64(input.LastMod.Unix()), 10))
+                }</span>
+
+                <span class="cov0" title="0">if input.Offset != 0 </span><span class="cov0" title="0">{
+                        query.Add("offset", strconv.FormatInt(int64(input.Offset), 10))
+                }</span>
+        }
+
+        <span class="cov0" title="0">uri.RawQuery = query.Encode()
+
+        res, err := e.c.checkResponseOK(e.c.get(uri.String()))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        var output ExecutionsOutputResponse
+        return &amp;output, json.NewDecoder(res.Body).Decode(&amp;output)</span>
+}
+
+// OutputWithState get the metadata associated with workflow step state changes along with the log output, optionally excluding log output.
+func (e *Executions) OutputWithState(id int, stateOnly bool) (*ExecutionsOutputResponse, error) <span class="cov0" title="0">{
+        rawURL := fmt.Sprintf("%s/execution/%d/output/state", e.c.RundeckAddr, id)
+
+        uri, err := url.Parse(rawURL)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">query := uri.Query()
+
+        if stateOnly </span><span class="cov0" title="0">{
+                query.Add("stateOnly", "true")
+        }</span>
+
+        <span class="cov0" title="0">uri.RawQuery = query.Encode()
+
+        res, err := e.c.checkResponseOK(e.c.get(uri.String()))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        var output ExecutionsOutputResponse
+        return &amp;output, json.NewDecoder(res.Body).Decode(&amp;output)</span>
+}
+
+// Abort aborts a running execution by id
+func (e *Executions) Abort(id int, asUser *string) (*AbortExecutionResponse, error) <span class="cov0" title="0">{
+        rawURL := fmt.Sprintf("%s/execution/%d/abort", e.c.RundeckAddr, id)
+
+        uri, err := url.Parse(rawURL)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">query := uri.Query()
+
+        if asUser != nil </span><span class="cov0" title="0">{
+                query.Add("asUser", stringValue(asUser))
+        }</span>
+
+        <span class="cov0" title="0">uri.RawQuery = query.Encode()
+
+        res, err := e.c.checkResponseOK(e.c.get(uri.String()))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        var abortResponse AbortExecutionResponse
+        return &amp;abortResponse, json.NewDecoder(res.Body).Decode(&amp;abortResponse)</span>
+}
+</pre>
+		
+		<pre class="file" id="file6" style="display: none">package rundeck
+
+import (
+        "bytes"
+        "encoding/json"
+        "errors"
+        "fmt"
+        "io"
+        "io/ioutil"
+        "math"
+        "net/url"
+        "strconv"
+        "strings"
+        "time"
+)
+
+// LogLevel pertains to job log levels
+type LogLevel string
+
+const (
+        JobLogLevelDebug   LogLevel = "DEBUG"
+        JobLogLevelVerbose LogLevel = "VERBOSE"
+        JobLogLevelInfo    LogLevel = "INFO"
+        JobLogLevelWarn    LogLevel = "WARN"
+        JobLogLevelError   LogLevel = "ERROR"
+)
+
+// JobFormat specifies the content type
+type JobFormat string
+
+const (
+        JobFormatXML  JobFormat = "xml"
+        JobFormatYAML JobFormat = "yaml"
+)
+
+// DuplicateOption instructs the job importer how to handle duplicate jobs
+type DuplicateOption string
+
+const (
+        DuplicateOptionSkip   DuplicateOption = "skip"
+        DuplicateOptionCreate DuplicateOption = "create"
+        DuplicateOptionUpdate DuplicateOption = "update"
+)
+
+// UUIDOption instructs the job importer how to handle duplicate job uuids
+type UUIDOption string
+
+const (
+        UUIDOptionPreserve UUIDOption = "preserve"
+        UUIDOptionRemove   UUIDOption = "remove"
+)
+
+// ToggleKind informs if executions or scheudles are being targeted
+type ToggleKind string
+
+const (
+        ToggleKindExecution ToggleKind = "execution"
+        ToggleKindSchedule  ToggleKind = "schedule"
+)
+
+// FileState informs the state of the uploaded file
+type FileState string
+
+const (
+        FileStateTemp     FileState = "temp"
+        FileStateDeleted  FileState = "deleted"
+        FileStateExpired  FileState = "expired"
+        FileStateRetained FileState = "retained"
+)
+
+// Job is information about a Rundeck job
+type Job struct {
+        ID                     string            `json:"id,omitempty"`
+        AverageDuration        int64             `json:"averageDuration,omitempty"`
+        Name                   string            `json:"name,omitempty"`
+        Group                  string            `json:"group,omitempty"`
+        Project                string            `json:"project,omitempty"`
+        Description            string            `json:"description,omitempty"`
+        HREF                   string            `json:"href,omitempty"`
+        Permalink              string            `json:"permalink,omitempty"`
+        Options                map[string]string `json:"options,omitempty"`
+        Scheduled              bool              `json:"scheduled,omitempty"`
+        ScheduleEnabled        bool              `json:"scheduleEnabled,omitempty"`
+        Enabled                bool              `json:"enabled,omitempty"`
+        ServerNodeUUID         string            `json:"serverNodeUUID,omitempty"`
+        ServerOwner            bool              `json:"serverOwner,omitempty"`
+        Index                  int               `json:"index,omitempty"`
+        NextScheduledExecution time.Time         `json:"nextScheduledExecution,omitempty"`
+}
+
+// ListJobsInput adds parameters to the endpoint for listing jobs
+type ListJobsInput struct {
+        IDs                  []string
+        GroupPath            string
+        JobFilter            string
+        JobExactFilter       string
+        GroupPathExact       string
+        ScheduledFilter      bool
+        ServerNodeUUIDFilter string
+}
+
+// RunJobInput are the optional paramenters passed when running a job
+type RunJobInput struct {
+        LogLevel  LogLevel
+        AsUser    string
+        Filters   map[string]string
+        RunAtTime time.Time
+        Options   map[string]string
+}
+
+type runJobInputSerializeable struct {
+        LogLevel  LogLevel          `json:"loglevel,omitempty"`
+        AsUser    string            `json:"asUser,omitempty"`
+        Filter    string            `json:"filter,omitempty"`
+        RunAtTime time.Time         `json:"runAtTime,omitempty"`
+        Options   map[string]string `json:"options,omitempty"`
+}
+
+// RetryJobInput are the optional parameters passed when retrying a job based on execution id
+type RetryJobInput struct {
+        LogLevel    LogLevel          `json:"loglevel,omitempty"`
+        AsUser      string            `json:"asUser,omitempty"`
+        Options     map[string]string `json:"options,omitempty"`
+        FailedNodes bool              `json:"failedNodes,omitempty"`
+}
+
+// ExportJobsInput are the optional parameters for the export endpoint
+type ExportJobsInput struct {
+        Format    JobFormat
+        IDList    []string
+        GroupPath string
+        JobFilter string
+}
+
+// ImportJobsInput are the parameters for the import endpoint
+type ImportJobsInput struct {
+        FileFormat      JobFormat
+        DuplicateOption DuplicateOption
+        UUIDOption      UUIDOption
+        RawContent      []byte
+}
+
+// ImportJobsResponse is the response that comes back from importing jobs
+type ImportJobsResponse struct {
+        Succeeded []*Job `json:"succeeded,omitempty"`
+        Failed    []*Job `json:"failed,omitempty"`
+        Skipped   []*Job `json:"skipped,omitempty"`
+}
+
+// BulkModifyInput contains a string slice of ids to modify in bulk
+type BulkModifyInput struct {
+        IDs []string `json:"ids"`
+}
+
+// BulkModifyResponse is the response body from the bulk modify endpoint
+type BulkModifyResponse struct {
+        RequestCount  int                 `json:"requestCount"`
+        AllSuccessful bool                `json:"allsuccessful"`
+        Enabled       bool                `json:"enabled,omitempty"`
+        Succeeded     []*BulkModifyObject `json:"successful,omitempty"`
+        Failed        []*BulkModifyObject `json:"failed,omitempty"`
+}
+
+// BulkModifyObject is an object in the BulkModifyResponse slices
+type BulkModifyObject struct {
+        ID        string `json:"id"`
+        ErrorCode string `json:"errorCode"`
+        Message   string `json:"message"`
+}
+
+// SuccessResponse is a response containing whether or not the api call was a success
+type SuccessResponse struct {
+        Success bool `json:"success"`
+}
+
+// UploadFileResponse is the response from uploading a file for a job.  It will contain the fileKey.
+type UploadFileResponse struct {
+        Total   int               `json:"total"`
+        Options map[string]string `json:"options"`
+}
+
+// UploadedFilesResponse returns the files uploaded for a particular job
+type UploadedFilesResponse struct {
+        PagingInfo
+        File []*FileOption `json:"files"`
+}
+
+// FileOption is the metadata about a file that was uploaded for a job option
+type FileOption struct {
+        ID             string    `json:"id"`
+        User           string    `json:"user"`
+        FileState      FileState `json:"fileState"`
+        SHA            string    `json:"sha"`
+        JobID          string    `json:"jobId"`
+        DateCreated    time.Time `json:"dateCreated"`
+        ServerNodeUUID string    `json:"serverNodeUUID"`
+        FileName       *string   `json:"fileName"`
+        Size           int64     `json:"size"`
+        ExpirationDate time.Time `json:"expirationDate"`
+        ExecID         *int64    `json:"execId"`
+}
+
+// Jobs is information pertaining to jobs API endpoints
+type Jobs struct {
+        c *Client
+}
+
+// Jobs interacts with endpoints pertaining to jobs
+func (c *Client) Jobs() *Jobs <span class="cov0" title="0">{
+        return &amp;Jobs{c: c}
+}</span>
+
+// List returns a list of jobs
+func (j *Jobs) List(project string, input *ListJobsInput) ([]*Job, error) <span class="cov0" title="0">{
+        uri, err := j.urlEncodeListInput(j.c.RundeckAddr+"/project/"+project+"/jobs", input)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">res, err := j.c.checkResponseOK(j.c.get(uri))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        var jobs []*Job
+        return jobs, json.NewDecoder(res.Body).Decode(&amp;jobs)</span>
+}
+
+// Run will execute a job
+func (j *Jobs) Run(jobID string, input *RunJobInput) (*Execution, error) <span class="cov0" title="0">{
+        uri := j.c.RundeckAddr + "/job/" + jobID + "/run"
+
+        var body io.Reader
+        if input != nil </span><span class="cov0" title="0">{
+                bs, err := json.Marshal(j.convertToSerializeable(input))
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, err
+                }</span>
+                <span class="cov0" title="0">body = bytes.NewReader(bs)</span>
+        }
+
+        <span class="cov0" title="0">res, err := j.c.checkResponseOK(j.c.post(uri, body))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        var execution Execution
+        return &amp;execution, json.NewDecoder(res.Body).Decode(&amp;execution)</span>
+}
+
+// Retry retries a job based on an execution id
+func (j *Jobs) Retry(jobID string, execID int64, input *RetryJobInput) (*Execution, error) <span class="cov0" title="0">{
+        uri := j.c.RundeckAddr + "/job/" + jobID + "/retry/" + strconv.FormatInt(execID, 10)
+
+        var body io.Reader
+        if input != nil </span><span class="cov0" title="0">{
+                bs, err := json.Marshal(input)
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, err
+                }</span>
+                <span class="cov0" title="0">body = bytes.NewReader(bs)</span>
+        }
+
+        <span class="cov0" title="0">res, err := j.c.checkResponseOK(j.c.post(uri, body))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        var execution Execution
+        return &amp;execution, json.NewDecoder(res.Body).Decode(&amp;execution)</span>
+}
+
+// Export exports a projects jobs defintions
+func (j *Jobs) Export(project string, input *ExportJobsInput) ([]byte, error) <span class="cov0" title="0">{
+        rawURL := j.c.RundeckAddr + "/project/" + project + "/jobs/export"
+
+        uri, err := url.Parse(rawURL)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">query := uri.Query()
+
+        if input != nil </span><span class="cov0" title="0">{
+                format := JobFormatXML
+                if input.Format == JobFormatYAML </span><span class="cov0" title="0">{
+                        format = JobFormatYAML
+                }</span>
+                <span class="cov0" title="0">query.Add("format", string(format))
+
+                if input.GroupPath != "" </span><span class="cov0" title="0">{
+                        query.Add("groupPath", input.GroupPath)
+                }</span>
+
+                <span class="cov0" title="0">if input.IDList != nil &amp;&amp; len(input.IDList) &gt; 0 </span><span class="cov0" title="0">{
+                        query.Add("idlist", strings.Join(input.IDList, ","))
+                }</span>
+
+                <span class="cov0" title="0">if input.JobFilter != "" </span><span class="cov0" title="0">{
+                        query.Add("jobFilter", input.JobFilter)
+                }</span>
+        } else<span class="cov0" title="0"> {
+                query.Add("format", string(JobFormatXML))
+        }</span>
+
+        <span class="cov0" title="0">uri.RawQuery = query.Encode()
+
+        res, err := j.c.checkResponseOK(j.c.get(uri.String()))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        return ioutil.ReadAll(res.Body)</span>
+}
+
+// Import imports job definitions
+func (j *Jobs) Import(project string, input *ImportJobsInput) (*ImportJobsResponse, error) <span class="cov0" title="0">{
+        if input == nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("input cannot be nil as ImportJobsInput.RawContent is required to import anything")
+        }</span>
+        <span class="cov0" title="0">rawURL := j.c.RundeckAddr + "/project/" + project + "/jobs/import"
+
+        uri, err := url.Parse(rawURL)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">query := uri.Query()
+
+        fileFormat := JobFormatXML
+        contentType := "application/xml"
+        if input.FileFormat == JobFormatYAML </span><span class="cov0" title="0">{
+                fileFormat = JobFormatYAML
+                contentType = "application/yaml"
+        }</span>
+        <span class="cov0" title="0">query.Add("fileformat", string(fileFormat))
+
+        if input.DuplicateOption != "" </span><span class="cov0" title="0">{
+                query.Add("dupeOption", string(input.DuplicateOption))
+        }</span>
+
+        <span class="cov0" title="0">if input.UUIDOption != "" </span><span class="cov0" title="0">{
+                query.Add("uuidOption", string(input.UUIDOption))
+        }</span>
+
+        <span class="cov0" title="0">uri.RawQuery = query.Encode()
+
+        res, err := j.c.checkResponseOK(j.c.postWithAdditionalHeaders(uri.String(), map[string]string{"Content-Type": contentType}, bytes.NewReader(input.RawContent)))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        var resp ImportJobsResponse
+        return &amp;resp, json.NewDecoder(res.Body).Decode(&amp;resp)</span>
+}
+
+// GetDefinition returns a job definition as a slice of bytces in either xml or yaml
+func (j *Jobs) GetDefinition(id string, format *JobFormat) ([]byte, error) <span class="cov0" title="0">{
+        rawURL := j.c.RundeckAddr + "/job/" + id
+
+        returnFormat := JobFormatXML
+        if format != nil &amp;&amp; *format == JobFormatYAML </span><span class="cov0" title="0">{
+                returnFormat = JobFormatYAML
+        }</span>
+
+        <span class="cov0" title="0">uri, err := url.Parse(rawURL)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">query := uri.Query()
+        query.Add("format", string(returnFormat))
+        uri.RawQuery = query.Encode()
+
+        res, err := j.c.checkResponseOK(j.c.get(uri.String()))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        return ioutil.ReadAll(res.Body)</span>
+}
+
+// DeleteDefinition deletes a job definition
+func (j *Jobs) DeleteDefinition(id string) error <span class="cov0" title="0">{
+        rawURL := j.c.RundeckAddr + "/job/" + id
+
+        res, err := j.c.checkResponseNoContent(j.c.delete(rawURL, nil))
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        return nil</span>
+}
+
+// BulkDelete deletes jobs in bulk by ID
+func (j *Jobs) BulkDelete(input *BulkModifyInput) (*BulkModifyResponse, error) <span class="cov0" title="0">{
+        if input == nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("bulk delete input cannot be nil")
+        }</span>
+
+        <span class="cov0" title="0">rawURL := j.c.RundeckAddr + "/jobs/delete"
+
+        bs, err := json.Marshal(input)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">res, err := j.c.checkResponseOK(j.c.delete(rawURL, bytes.NewReader(bs)))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">var response BulkModifyResponse
+        return &amp;response, json.NewDecoder(res.Body).Decode(&amp;response)</span>
+}
+
+// ToggleExecutionsOrSchedules toggles the executions or schedules of the supplied job
+func (j *Jobs) ToggleExecutionsOrSchedules(id string, enabled bool, toggleKind ToggleKind) (*SuccessResponse, error) <span class="cov0" title="0">{
+        if toggleKind != ToggleKindExecution &amp;&amp; toggleKind != ToggleKindSchedule </span><span class="cov0" title="0">{
+                return nil, errors.New(`toggleKind must be "execution" or "schedule"`)
+        }</span>
+
+        <span class="cov0" title="0">rawURL := j.c.RundeckAddr + "/job/" + id + "/" + string(toggleKind)
+
+        if enabled </span><span class="cov0" title="0">{
+                rawURL += "/enable"
+        }</span> else<span class="cov0" title="0"> {
+                rawURL += "/disable"
+        }</span>
+
+        <span class="cov0" title="0">res, err := j.c.checkResponseOK(j.c.post(rawURL, nil))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        var success SuccessResponse
+        return &amp;success, json.NewDecoder(res.Body).Decode(&amp;success)</span>
+}
+
+// BulkToggleExecutionsOrSchedules toggles the execution or scheudle value of the suppplied job ids
+func (j *Jobs) BulkToggleExecutionsOrSchedules(input *BulkModifyInput, enabled bool, toggleKind ToggleKind) (*BulkModifyResponse, error) <span class="cov0" title="0">{
+        if input == nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("input cannot be nil")
+        }</span>
+
+        <span class="cov0" title="0">if toggleKind != ToggleKindExecution &amp;&amp; toggleKind != ToggleKindSchedule </span><span class="cov0" title="0">{
+                return nil, errors.New(`toggleKind must be "execution" or "schedule"`)
+        }</span>
+
+        <span class="cov0" title="0">rawURL := j.c.RundeckAddr + "/jobs/" + string(toggleKind)
+
+        if enabled </span><span class="cov0" title="0">{
+                rawURL += "/enable"
+        }</span> else<span class="cov0" title="0"> {
+                rawURL += "/disable"
+        }</span>
+
+        <span class="cov0" title="0">bs, err := json.Marshal(input)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">res, err := j.c.checkResponseOK(j.c.post(rawURL, bytes.NewReader(bs)))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        var bulk BulkModifyResponse
+        return &amp;bulk, json.NewDecoder(res.Body).Decode(&amp;bulk)</span>
+}
+
+// GetMetadata returns basic information about a job
+func (j *Jobs) GetMetadata(id string) (*Job, error) <span class="cov0" title="0">{
+        rawURL := j.c.RundeckAddr + "/job/" + id + "/info"
+
+        res, err := j.c.checkResponseOK(j.c.get(rawURL))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        var job Job
+        return &amp;job, json.NewDecoder(res.Body).Decode(&amp;job)</span>
+}
+
+// UploadFileForJobOption uploads a file to rundeck for a job option and returns the file key
+func (j *Jobs) UploadFileForJobOption(id, optionName string, content []byte, fileName *string) (*UploadFileResponse, error) <span class="cov0" title="0">{
+        rawURL := j.c.RundeckAddr + "/job/" + id + "/input/file"
+
+        uri, err := url.Parse(rawURL)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">query := uri.Query()
+        query.Add("optionName", optionName)
+        if fileName != nil </span><span class="cov0" title="0">{
+                query.Add("fileName", stringValue(fileName))
+        }</span>
+        <span class="cov0" title="0">uri.RawQuery = query.Encode()
+
+        headers := map[string]string{
+                "Content-Type": "application/octet-stream",
+        }
+
+        res, err := j.c.checkResponseOK(j.c.postWithAdditionalHeaders(uri.String(), headers, bytes.NewReader(content)))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        var uploadResponse UploadFileResponse
+        return &amp;uploadResponse, json.NewDecoder(res.Body).Decode(&amp;uploadResponse)</span>
+}
+
+// ListFilesUploadedForJob returns files that were uploaded for a particular job
+func (j *Jobs) ListFilesUploadedForJob(id string, fileState *FileState, max *int) (*UploadedFilesResponse, error) <span class="cov0" title="0">{
+        rawURL := j.c.RundeckAddr + "/job/" + id + "/input/files"
+
+        uri, err := url.Parse(rawURL)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">query := uri.Query()
+        if fileState != nil </span><span class="cov0" title="0">{
+                query.Add("fileState", string(*fileState))
+        }</span>
+        <span class="cov0" title="0">if max != nil </span><span class="cov0" title="0">{
+                query.Add("max", strconv.Itoa(math.MaxInt8))
+        }</span>
+        <span class="cov0" title="0">uri.RawQuery = query.Encode()
+
+        res, err := j.c.checkResponseOK(j.c.get(uri.String()))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        var files UploadedFilesResponse
+        return &amp;files, json.NewDecoder(res.Body).Decode(&amp;files)</span>
+}
+
+// FileInfo returns information about an uploaded file
+func (j *Jobs) FileInfo(id string) (*FileOption, error) <span class="cov0" title="0">{
+        rawURL := j.c.RundeckAddr + "/jobs/file/" + id
+
+        res, err := j.c.checkResponseOK(j.c.get(rawURL))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        var info FileOption
+        return &amp;info, json.NewDecoder(res.Body).Decode(&amp;info)</span>
+}
+
+func (j *Jobs) urlEncodeListInput(rawURL string, input *ListJobsInput) (string, error) <span class="cov0" title="0">{
+        uri, err := url.Parse(rawURL)
+        if err != nil </span><span class="cov0" title="0">{
+                return rawURL, err
+        }</span>
+
+        <span class="cov0" title="0">query := uri.Query()
+
+        if input != nil </span><span class="cov0" title="0">{
+                if input.GroupPath != "" </span><span class="cov0" title="0">{
+                        query.Add("groupPath", input.GroupPath)
+                }</span>
+
+                <span class="cov0" title="0">if input.GroupPathExact != "" </span><span class="cov0" title="0">{
+                        query.Add("groupPathExact", input.GroupPathExact)
+                }</span>
+
+                <span class="cov0" title="0">if input.IDs != nil &amp;&amp; len(input.IDs) &gt; 0 </span><span class="cov0" title="0">{
+                        query.Add("idlist", strings.Join(input.IDs, ","))
+                }</span>
+
+                <span class="cov0" title="0">if input.JobExactFilter != "" </span><span class="cov0" title="0">{
+                        query.Add("jobExactFilter", input.JobExactFilter)
+                }</span>
+
+                <span class="cov0" title="0">if input.JobFilter != "" </span><span class="cov0" title="0">{
+                        query.Add("jobFilter", input.JobFilter)
+                }</span>
+
+                <span class="cov0" title="0">if input.ScheduledFilter </span><span class="cov0" title="0">{
+                        query.Add("scheduledFilter", strconv.FormatBool(input.ScheduledFilter))
+                }</span>
+
+                <span class="cov0" title="0">if input.ServerNodeUUIDFilter != "" </span><span class="cov0" title="0">{
+                        query.Add("serverNodeUUIDFilter", input.ServerNodeUUIDFilter)
+                }</span>
+        }
+
+        <span class="cov0" title="0">uri.RawQuery = query.Encode()
+
+        return uri.String(), nil</span>
+}
+
+func (j *Jobs) convertToSerializeable(input *RunJobInput) *runJobInputSerializeable <span class="cov0" title="0">{
+        var serializeable runJobInputSerializeable
+        serializeable.AsUser = input.AsUser
+        serializeable.LogLevel = input.LogLevel
+        if input.Options != nil </span><span class="cov0" title="0">{
+                serializeable.Options = input.Options
+        }</span>
+        <span class="cov0" title="0">serializeable.RunAtTime = input.RunAtTime
+
+        if input.Filters != nil </span><span class="cov0" title="0">{
+                serializeable.Filter = j.c.convertFiltersToSerializeableFormat(input.Filters)
+        }</span>
+
+        <span class="cov0" title="0">return &amp;serializeable</span>
+}
+</pre>
+		
+		<pre class="file" id="file7" style="display: none">package rundeck
+
+import "encoding/json"
+
+// ListKeysResponse ...
+type ListKeysResponse struct {
+        Resources []*KeyResource `json:"resources"`
+        sharedKeyMeta
+}
+
+// KeyResource ...
+type KeyResource struct {
+        Meta KeyMetadata `json:"meta"`
+        Name string      `json:"name"`
+        sharedKeyMeta
+}
+
+// KeyMetadata ...
+type KeyMetadata struct {
+        KeyType     string `json:"Rundeck-key-type"`
+        ContentMask string `json:"Rundeck-content-mask"`
+        ContentSize int64  `json:"Rundeck-content-size"`
+        ContentType string `json:"Rundeck-content-type"`
+}
+
+type sharedKeyMeta struct {
+        URL  string `json:"url"`
+        Type string `json:"type"`
+        Path string `json:"path"`
+}
+
+// KeyStore interacts with the storage facility with regards to keys
+type KeyStore struct {
+        c *Client
+}
+
+// KeyStorage returns a keystore for use
+func (c *Client) KeyStorage() *KeyStore <span class="cov0" title="0">{
+        return &amp;KeyStore{c: c}
+}</span>
+
+// List lists resources at the specified path
+func (k *KeyStore) List(path string) (*ListKeysResponse, error) <span class="cov0" title="0">{
+        rawURL := k.c.RundeckAddr + "/storage/keys/" + path + "/"
+
+        res, err := k.c.checkResponseOK(k.c.get(rawURL))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        var keys ListKeysResponse
+        return &amp;keys, json.NewDecoder(res.Body).Decode(&amp;keys)</span>
+}
+
+// KeyMetadata returns the metadata about the stored key file
+func (k *KeyStore) KeyMetadata(path, file string) (*KeyMetadata, error) <span class="cov0" title="0">{
+        rawURL := k.c.RundeckAddr + "/storage/keys/" + path + "/" + file
+
+        res, err := k.c.checkResponseOK(k.c.get(rawURL))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        var metadata KeyMetadata
+        return &amp;metadata, json.NewDecoder(res.Body).Decode(&amp;metadata)</span>
+}
+
+// Delete deletes the file if it exists
+func (k *KeyStore) Delete(path, file string) error <span class="cov0" title="0">{
+        rawURL := k.c.RundeckAddr + "/storage/keys/" + path + "/" + file
+
+        _, err := k.c.checkResponseNoContent(k.c.delete(rawURL, nil))
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov0" title="0">return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file8" style="display: none">package rundeck
+
+import (
+        "encoding/json"
+)
+
+// LogStore contains information about logstorage in the system API
+type LogStore struct {
+        c *Client
+}
+
+// LogStore interacts with the according API
+func (c *Client) LogStore() *LogStore <span class="cov0" title="0">{
+        return &amp;LogStore{c: c}
+}</span>
+
+// LogStorage returns log storage information and stats
+func (l *LogStore) LogStorage() (*LogStorageStats, error) <span class="cov0" title="0">{
+        url := l.c.RundeckAddr + "/system/logstorage"
+
+        res, err := l.c.checkResponseOK(l.c.get(url))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        var logStorage LogStorageStats
+        return &amp;logStorage, json.NewDecoder(res.Body).Decode(&amp;logStorage)</span>
+}
+
+// IncompleteLogStorage lists executions with incomplete logstorage
+func (l *LogStore) IncompleteLogStorage() (*IncompleteLogStorageResponse, error) <span class="cov0" title="0">{
+        url := l.c.RundeckAddr + "/system/logstorage/incomplete"
+
+        res, err := l.c.checkResponseOK(l.c.get(url))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        var incompleteLogStorageResponse IncompleteLogStorageResponse
+        return &amp;incompleteLogStorageResponse, json.NewDecoder(res.Body).Decode(&amp;incompleteLogStorageResponse)</span>
+}
+
+// ResumeIncompleteLogStorage resumes processing incomplete log storage uploads
+func (l *LogStore) ResumeIncompleteLogStorage() (*ResumedIncompleteLogStorageResponse, error) <span class="cov0" title="0">{
+        url := l.c.RundeckAddr + "/system/logstorage/incomplete/resume"
+
+        res, err := l.c.checkResponseOK(l.c.post(url, nil))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        var resumed ResumedIncompleteLogStorageResponse
+        return &amp;resumed, json.NewDecoder(res.Body).Decode(&amp;resumed)</span>
+}
+</pre>
+		
+		<pre class="file" id="file9" style="display: none">package rundeck
+
+import (
+        "bytes"
+        "encoding/json"
+        "errors"
+        "fmt"
+        "io/ioutil"
+        "net/url"
+        "strings"
+)
+
+// Status indicates the general status of an operation
+type Status string
+
+const (
+        StatusSuccessful Status = "successful"
+        StatusFailed     Status = "failed"
+)
+
+// Project is metadata about a project in rundeck
+type Project struct {
+        Name        string `json:"name"`
+        Description string `json:"description"`
+        URL         string `json:"url"`
+}
+
+// ProjectInfo contains the configuration for the project in addition to the metadata
+type ProjectInfo struct {
+        Project
+        Config map[string]string `json:"config,omitempty"`
+}
+
+// CreateProjectInput is the payload when posting for project creation
+type CreateProjectInput struct {
+        Name        string            `json:"name"`
+        Description string            `json:"description,omitempty"`
+        Config      map[string]string `json:"config,omitempty"`
+}
+
+// ProjectConfigKeyPair is a single key pair from a project configuration
+type ProjectConfigKeyPair struct {
+        Key   string `json:"key"`
+        Value string `json:"value"`
+}
+
+// ArchiveExportInput ...
+type ArchiveExportInput struct {
+        ExecutionIDs     []int
+        ExportAll        bool
+        ExportJobs       bool
+        ExportExecutions bool
+        ExportConfigs    bool
+        ExportReadmes    bool
+        ExportAcls       bool
+}
+
+// ArchiveExportAsyncStatusResponse struct
+type ArchiveExportAsyncStatusResponse struct {
+        Token      string `json:"token"`
+        Ready      bool   `json:"ready"`
+        Percentage int    `json:"int"`
+}
+
+// ArchiveImportInput are option parameters for importing a project archive
+type ArchiveImportInput struct {
+        JobUUIDOption    UUIDOption
+        ImportExecutions bool
+        ImportConfig     bool
+        ImportACL        bool
+}
+
+// ArchiveImportResponse ...
+type ArchiveImportResponse struct {
+        ImportStatus    Status   `json:"import_status"`
+        Errors          []string `json:"errors"`
+        ExecutionErrors []string `json:"execution_errors"`
+        ACLErrors       []string `json:"acl_errors"`
+}
+
+// NodeEntryAnything represents everything else that can be added to the node entry map
+type NodeEntryAnything map[string]string
+
+// NodeEntry contains some specific entries in the node entry map
+type NodeEntry struct {
+        Nodename    string `json:"nodename"`
+        Hostname    string `json:"hostname"`
+        Username    string `json:"username"`
+        Description string `json:"description"`
+        Tags        string `json:"tags"`
+        OSFamily    string `json:"osFamily"`
+        OSArch      string `json:"osArch"`
+        OSName      string `json:"osName"`
+        OSVersion   string `json:"osVersion"`
+        EditURL     string `json:"editUrl"`
+        RemoteURL   string `json:"remoteUrl"`
+        NodeEntryAnything
+}
+
+// Projects is information pertaining to projects API endpoints
+type Projects struct {
+        c *Client
+}
+
+// Projects interacts with endpoints pertaining to projects
+func (c *Client) Projects() *Projects <span class="cov8" title="1">{
+        return &amp;Projects{c: c}
+}</span>
+
+// List returns a list of the projects
+func (p *Projects) List() ([]*Project, error) <span class="cov8" title="1">{
+        rawURL := p.c.RundeckAddr + "/projects"
+
+        res, err := p.c.checkResponseOK(p.c.get(rawURL))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">defer res.Body.Close()
+
+        var projects []*Project
+        return projects, json.NewDecoder(res.Body).Decode(&amp;projects)</span>
+}
+
+// Create will make a new project
+func (p *Projects) Create(data *CreateProjectInput) (*ProjectInfo, error) <span class="cov8" title="1">{
+        if data == nil </span><span class="cov8" title="1">{
+                return nil, errors.New("data cannot be nil")
+        }</span>
+
+        <span class="cov8" title="1">rawURL := p.c.RundeckAddr + "/projects"
+
+        bs, err := json.Marshal(data)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="1">res, err := p.c.checkResponseCreated(p.c.post(rawURL, bytes.NewReader(bs)))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">defer res.Body.Close()
+
+        var info ProjectInfo
+        return &amp;info, json.NewDecoder(res.Body).Decode(&amp;info)</span>
+}
+
+// GetInfo returns project info
+func (p *Projects) GetInfo(project string) (*ProjectInfo, error) <span class="cov8" title="1">{
+        rawURL := p.c.RundeckAddr + "/project/" + project
+
+        res, err := p.c.checkResponseOK(p.c.get(rawURL))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">defer res.Body.Close()
+
+        var info ProjectInfo
+        return &amp;info, json.NewDecoder(res.Body).Decode(&amp;info)</span>
+}
+
+// Delete removes an existing project
+func (p *Projects) Delete(project string) error <span class="cov8" title="1">{
+        rawURL := p.c.RundeckAddr + "/project/" + project
+
+        res, err := p.c.checkResponseNoContent(p.c.delete(rawURL, nil))
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov8" title="1">defer res.Body.Close()
+
+        return nil</span>
+}
+
+// Configuration retrieves the project configuration data
+func (p *Projects) Configuration(project string) (map[string]string, error) <span class="cov8" title="1">{
+        rawURL := p.c.RundeckAddr + "/project/" + project + "/config"
+
+        res, err := p.c.checkResponseOK(p.c.get(rawURL))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">defer res.Body.Close()
+
+        var config map[string]string
+        return config, json.NewDecoder(res.Body).Decode(&amp;config)</span>
+}
+
+// Configure modifies the project configuration data
+func (p *Projects) Configure(project string, config map[string]string) (map[string]string, error) <span class="cov8" title="1">{
+        rawURL := p.c.RundeckAddr + "/project/" + project + "/config"
+
+        bs, err := json.Marshal(config)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="1">res, err := p.c.checkResponseOK(p.c.put(rawURL, bytes.NewReader(bs)))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">defer res.Body.Close()
+
+        var conf map[string]string
+        return conf, json.NewDecoder(res.Body).Decode(&amp;conf)</span>
+}
+
+// GetConfigKey retieves the value
+func (p *Projects) GetConfigKey(project, key string) (*ProjectConfigKeyPair, error) <span class="cov8" title="1">{
+        rawURL := p.c.RundeckAddr + "/project/" + project + "/config/" + key
+
+        res, err := p.c.checkResponseOK(p.c.get(rawURL))
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">defer res.Body.Close()
+
+        var result ProjectConfigKeyPair
+        return &amp;result, json.NewDecoder(res.Body).Decode(&amp;result)</span>
+}
+
+// SetConfigKey modifies the value
+func (p *Projects) SetConfigKey(project string, keyPair *ProjectConfigKeyPair) (*ProjectConfigKeyPair, error) <span class="cov8" title="1">{
+        if keyPair == nil </span><span class="cov8" title="1">{
+                return nil, errors.New("keyPair cannot be nil when setting a config key")
+        }</span>
+
+        <span class="cov8" title="1">bs, err := json.Marshal(keyPair)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="1">rawURL := p.c.RundeckAddr + "/project/" + project + "/config/" + keyPair.Key
+        res, err := p.c.checkResponseOK(p.c.put(rawURL, bytes.NewReader(bs)))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">defer res.Body.Close()
+
+        var result ProjectConfigKeyPair
+        return &amp;result, json.NewDecoder(res.Body).Decode(&amp;result)</span>
+}
+
+// DeleteConfigKey removes the key
+func (p *Projects) DeleteConfigKey(project, key string) error <span class="cov8" title="1">{
+        rawURL := p.c.RundeckAddr + "/project/" + project + "/config/" + key
+        _, err := p.c.checkResponseNoContent(p.c.delete(rawURL, nil))
+        return err
+}</span>
+
+// ArchiveExport exports a zip archive of the project synchronously
+func (p *Projects) ArchiveExport(project string, input *ArchiveExportInput) ([]byte, error) <span class="cov8" title="1">{
+        rawURL := p.c.RundeckAddr + "/project/" + project + "/export"
+
+        uri, err := url.Parse(rawURL)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">uri.RawQuery = p.encodeArchiveExportInput(uri.Query(), input)
+
+        res, err := p.c.checkResponseOK(p.c.get(uri.String()))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">defer res.Body.Close()
+
+        return ioutil.ReadAll(res.Body)</span>
+}
+
+// ArchiveExportAsync exports a zip archive of the project asynchronously
+func (p *Projects) ArchiveExportAsync(project string, input *ArchiveExportInput) (*ArchiveExportAsyncStatusResponse, error) <span class="cov8" title="1">{
+        rawURL := p.c.RundeckAddr + "/project/" + project + "/export/async"
+
+        uri, err := url.Parse(rawURL)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">uri.RawQuery = p.encodeArchiveExportInput(uri.Query(), input)
+
+        res, err := p.c.checkResponseOK(p.c.get(uri.String()))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">defer res.Body.Close()
+
+        var status ArchiveExportAsyncStatusResponse
+        return &amp;status, json.NewDecoder(res.Body).Decode(&amp;status)</span>
+}
+
+// ArchiveExportAsyncStatus gets the status of the async archive
+func (p *Projects) ArchiveExportAsyncStatus(project, token string) (*ArchiveExportAsyncStatusResponse, error) <span class="cov8" title="1">{
+        rawURL := p.c.RundeckAddr + "/project/" + project + "/export/status/" + token
+
+        res, err := p.c.checkResponseOK(p.c.get(rawURL))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">defer res.Body.Close()
+
+        var status ArchiveExportAsyncStatusResponse
+        return &amp;status, json.NewDecoder(res.Body).Decode(&amp;status)</span>
+}
+
+// ArchiveExportAsyncDownload downloads the finished artifact
+func (p *Projects) ArchiveExportAsyncDownload(project, token string) ([]byte, error) <span class="cov8" title="1">{
+        status, err := p.ArchiveExportAsyncStatus(project, token)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="1">if !status.Ready </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("archive is only %d%% complete", status.Percentage)
+        }</span>
+
+        <span class="cov8" title="1">rawURL := p.c.RundeckAddr + "/project/" + project + "/export/download/" + token
+        res, err := p.c.checkResponseOK(p.c.get(rawURL))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov8" title="1">defer res.Body.Close()
+
+        return ioutil.ReadAll(res.Body)</span>
+}
+
+// ArchiveImport imports a zip archive into the project
+func (p *Projects) ArchiveImport(project string, content []byte, input *ArchiveImportInput) (*ArchiveImportResponse, error) <span class="cov8" title="1">{
+        rawURL := p.c.RundeckAddr + "/project/" + project + "/import"
+
+        uri, err := url.Parse(rawURL)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="1">query := uri.Query()
+
+        if input != nil </span><span class="cov8" title="1">{
+                if input.JobUUIDOption == UUIDOptionRemove || input.JobUUIDOption == UUIDOptionPreserve </span><span class="cov8" title="1">{
+                        query.Add("jobUuidOption", string(input.JobUUIDOption))
+                }</span>
+
+                <span class="cov8" title="1">if input.ImportACL </span><span class="cov8" title="1">{
+                        query.Add("importACL", "true")
+                }</span>
+
+                <span class="cov8" title="1">if input.ImportConfig </span><span class="cov8" title="1">{
+                        query.Add("importConfig", "true")
+                }</span>
+
+                <span class="cov8" title="1">if input.ImportExecutions </span><span class="cov8" title="1">{
+                        query.Add("importExecutions", "true")
+                }</span>
+        }
+
+        <span class="cov8" title="1">uri.RawQuery = query.Encode()
+
+        headers := map[string]string{
+                "Content-Type": "application/zip",
+        }
+
+        res, err := p.c.checkResponseOK(p.c.putWithAdditionalHeaders(uri.String(), headers, bytes.NewReader(content)))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="1">var response ArchiveImportResponse
+        return &amp;response, json.NewDecoder(res.Body).Decode(&amp;response)</span>
+}
+
+// ListResources lists resources for a given project
+func (p *Projects) ListResources(project string, nodeFilters map[string]string) (map[string]*NodeEntry, error) <span class="cov8" title="1">{
+        rawURL := p.c.RundeckAddr + "/project/" + project + "/resources"
+
+        uri, err := url.Parse(rawURL)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="1">query := uri.Query()
+
+        if nodeFilters != nil &amp;&amp; len(nodeFilters) &gt; 0 </span><span class="cov8" title="1">{
+                query.Add("filter", p.c.convertFiltersToSerializeableFormat(nodeFilters))
+        }</span>
+
+        <span class="cov8" title="1">uri.RawQuery = query.Encode()
+
+        res, err := p.c.checkResponseOK(p.c.get(uri.String()))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov8" title="1">var entries map[string]*NodeEntry
+        return entries, json.NewDecoder(res.Body).Decode(&amp;entries)</span>
+}
+
+func (p *Projects) encodeArchiveExportInput(query url.Values, input *ArchiveExportInput) string <span class="cov8" title="1">{
+        if input != nil </span><span class="cov8" title="1">{
+                if input.ExecutionIDs != nil &amp;&amp; len(input.ExecutionIDs) &gt; 0 </span><span class="cov8" title="1">{
+                        query.Add("executionIds", strings.Join(intSliceToStringSlice(input.ExecutionIDs), ","))
+                }</span>
+
+                <span class="cov8" title="1">if input.ExportAcls </span><span class="cov8" title="1">{
+                        query.Add("exportAcls", "true")
+                }</span>
+
+                <span class="cov8" title="1">if input.ExportAll </span><span class="cov8" title="1">{
+                        query.Add("exportAll", "true")
+                }</span>
+
+                <span class="cov8" title="1">if input.ExportConfigs </span><span class="cov8" title="1">{
+                        query.Add("exportConfigs", "true")
+                }</span>
+
+                <span class="cov8" title="1">if input.ExportExecutions </span><span class="cov8" title="1">{
+                        query.Add("exportExecutions", "true")
+                }</span>
+
+                <span class="cov8" title="1">if input.ExportJobs </span><span class="cov8" title="1">{
+                        query.Add("exportJobs", "true")
+                }</span>
+
+                <span class="cov8" title="1">if input.ExportReadmes </span><span class="cov8" title="1">{
+                        query.Add("exportReadmes", "true")
+                }</span>
+        }
+        <span class="cov8" title="1">return query.Encode()</span>
+}
+</pre>
+		
+		<pre class="file" id="file10" style="display: none">package rundeck
+
+import (
+        "bytes"
+        "encoding/json"
+        "fmt"
+)
+
+// TakeoverScheduleInput is the payload to takeover jobs in cluster mode
+type TakeoverScheduleInput struct {
+        Server  *TakeoverServer   `json:"server,omitempty"`
+        Project *string           `json:"project,omitempty"`
+        Job     *TakeoverJobInput `json:"job,omitempty"`
+}
+
+// TakeoverServer ...
+type TakeoverServer struct {
+        UUID string `json:"uuid,omitempty"`
+        All  bool   `json:"all,omitempty"`
+}
+
+// TakeoverJobInput ...
+type TakeoverJobInput struct {
+        ID string `json:"id,omitempty"`
+}
+
+// TakeoverScheduleResponse is the response body from the endpoint
+type TakeoverScheduleResponse struct {
+        TakeoverSchedule TakeoverSchedule `json:"takeoverSchedule"`
+        Self             struct {
+                Server TakeoverServer `json:"server,omitempty"`
+        } `json:"self,omitempty"`
+        Message    string `json:"message"`
+        APIVersion int    `json:"apiversion"`
+        Success    bool   `json:"success"`
+}
+
+// TakeoverSchedule is the result from issuing a takeover call
+type TakeoverSchedule struct {
+        Jobs    TakeoverJobs   `json:"jobs,omitempty"`
+        Server  TakeoverServer `json:"server,omitempty"`
+        Project string         `json:"project,omitempty"`
+}
+
+// TakeoverJobs ...
+type TakeoverJobs struct {
+        Failed     []TakeoverJob `json:"failed"`
+        Successful []TakeoverJob `json:"successful"`
+        Total      int           `json:"total"`
+}
+
+// TakeoverJob ...
+type TakeoverJob struct {
+        HREF          string `json:"href"`
+        Permalink     string `json:"permalink"`
+        ID            string `json:"id"`
+        PreviousOwner string `json:"previous-owner"`
+}
+
+// ClusterScheduler contains information relating to cluster mode in Rundeck
+type ClusterScheduler struct {
+        c *Client
+}
+
+// ClusterScheduler interacts with the cluster endpoints on Rundeck
+func (c *Client) ClusterScheduler() *ClusterScheduler <span class="cov0" title="0">{
+        return &amp;ClusterScheduler{c: c}
+}</span>
+
+// TakeoverSchedule tells the Rundeck server in cluster mode to claim scheduled jobs from another cluster server
+func (cs *ClusterScheduler) TakeoverSchedule(input *TakeoverScheduleInput) (*TakeoverScheduleResponse, error) <span class="cov0" title="0">{
+        if input == nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("input cannot be nil")
+        }</span>
+        <span class="cov0" title="0">url := cs.c.RundeckAddr + "/scheduler/takeover"
+
+        bs, err := json.Marshal(input)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">res, err := cs.c.checkResponseOK(cs.c.put(url, bytes.NewReader(bs)))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        var takeover TakeoverScheduleResponse
+        return &amp;takeover, json.NewDecoder(res.Body).Decode(&amp;takeover)</span>
+}
+
+// ListScheduledJobs lists scheduled jobs with the schedule owned by the server with the specified uuid.
+// If uuid is nil, then the client server will be used.
+func (cs *ClusterScheduler) ListScheduledJobs(uuid *string) ([]*Job, error) <span class="cov0" title="0">{
+        url := cs.c.RundeckAddr + "/scheduler"
+
+        if uuid != nil </span><span class="cov0" title="0">{
+                url += "/server/" + stringValue(uuid)
+        }</span>
+
+        <span class="cov0" title="0">url += "/jobs"
+
+        res, err := cs.c.checkResponseOK(cs.c.get(url))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        var jobs []*Job
+        return jobs, json.NewDecoder(res.Body).Decode(&amp;jobs)</span>
+}
+</pre>
+		
+		<pre class="file" id="file11" style="display: none">package rundeck
+
+import (
+        "encoding/json"
+        "fmt"
+        "time"
+)
+
+// ExecutionMode informs the whether or not rundeck can execute jobs
+type ExecutionMode string
+
+const (
+        ExecutionModeActive  ExecutionMode = "active"
+        ExecutionModePassive ExecutionMode = "passive"
+)
+
+// SystemInfoResponse is Rundeck server information and stats
+type SystemInfoResponse struct {
+        System SystemInfo `json:"system"`
+}
+
+// SystemInfo is information about the rundeck system
+type SystemInfo struct {
+        Timestamp   Timestamp             `json:"timestamp"`
+        Rundeck     Rundeck               `json:"rundeck"`
+        Executions  ExecutionModeResponse `json:"executions"`
+        OS          OperatingSystem       `json:"os"`
+        JVM         JVM                   `json:"jvm"`
+        Stats       Stats                 `json:"stats"`
+        Metrics     Metrics               `json:"metrics"`
+        ThreadDump  ThreadDump            `json:"threadDump"`
+        HealthCheck HealthCheck           `json:"healthcheck"`
+}
+
+// Timestamp is time information on the Rundeck server
+type Timestamp struct {
+        Epoch    int64     `json:"epoch"`
+        Unit     string    `json:"unit"`
+        DateTime time.Time `json:"datetime"`
+}
+
+// Rundeck is information about the build
+type Rundeck struct {
+        Version    string `json:"version"`
+        Build      string `json:"build"`
+        Node       string `json:"node"`
+        APIVersion int    `json:"apiversion"`
+        ServerUUID string `json:"serverUUID"`
+}
+
+// ExecutionModeResponse is information about the rundeck server's ability to execute jobs
+type ExecutionModeResponse struct {
+        Active        bool          `json:"active"`
+        ExecutionMode ExecutionMode `json:"executionMode"`
+}
+
+// OperatingSystem is information regarding the Rundeck host
+type OperatingSystem struct {
+        Architecture string `json:"arch"`
+        Name         string `json:"name"`
+        Version      string `json:"version"`
+}
+
+// JVM is information about the JVM of Rundeck
+type JVM struct {
+        Name                   string `json:"name"`
+        Vendor                 string `json:"vendor"`
+        Version                string `json:"version"`
+        ImplementationVeresion string `json:"implementationVersion"`
+}
+
+// Stats are basic Rundeck stats
+type Stats struct {
+        Uptime    UptimeStats    `json:"uptime"`
+        CPU       CPUStats       `json:"cpu"`
+        Memory    MemoryStats    `json:"memory"`
+        Scheduler SchedulerStats `json:"scheduler"`
+        Threads   ThreadStats    `json:"threads"`
+}
+
+// UptimeStats are basic stats about system uptime
+type UptimeStats struct {
+        Duration int64     `json:"duration"`
+        Unit     string    `json:"unit"`
+        Since    Timestamp `json:"since"`
+}
+
+// CPUStats are basic stats about the CPU usage
+type CPUStats struct {
+        LoadAverage LoadAverageStats `json:"loadAverage"`
+        Processors  int              `json:"processors"`
+}
+
+// MemoryStats are basic stats about memory usage
+type MemoryStats struct {
+        Unit  string `json:"unit"`
+        Max   int64  `json:"max"`
+        Free  int64  `json:"free"`
+        Total int64  `json:"total"`
+}
+
+// SchedulerStats are stats about the Rundeck scheduler
+type SchedulerStats struct {
+        Running        int `json:"running"`
+        ThreadPoolSize int `json:"threadPoolSize"`
+}
+
+// ThreadStats are stats about thread usage
+type ThreadStats struct {
+        Active int `json:"active"`
+}
+
+// LoadAverageStats are stats about the CPU load
+type LoadAverageStats struct {
+        Unit    string  `json:"unit"`
+        Average float64 `json:"average"`
+}
+
+// Metrics contains a url to a page regarding metrics
+type Metrics struct {
+        HREF        string `json:"href"`
+        ContentType string `json:"contentType"`
+}
+
+// ThreadDump contains a url to a page regarding thread dump information
+type ThreadDump struct {
+        HREF        string `json:"href"`
+        ContentType string `json:"contentType"`
+}
+
+// HealthCheck contains a urll to a page regarding health information
+type HealthCheck struct {
+        HREF        string `json:"href"`
+        ContentType string `json:"contentType"`
+}
+
+// LogStorageStats is the log storage info and stats
+type LogStorageStats struct {
+        Enabled         bool   `json:"enabled"`
+        PluginName      string `json:"pluginName"`
+        SucceededCount  int64  `json:"succeededCount"`
+        FailedCount     int64  `json:"failedCount"`
+        QueuedCount     int64  `json:"queuedCount"`
+        TotalCount      int64  `json:"totalCount"`
+        ImcompleteCount int64  `json:"incompleteCount"`
+        MissingCount    int64  `json:"missingCount"`
+}
+
+// LogStorageMetadata is information about an executions associated log storage
+type LogStorageMetadata struct {
+        LocalFilesPresent   bool      `json:"localFilesPresent"`
+        IncompleteFileTypes []string  `json:"incompleteFileTypes"`
+        Queued              bool      `json:"queued"`
+        Failed              bool      `json:"failed"`
+        Date                time.Time `json:"date"`
+}
+
+// IncompleteLogStorageResponse is the response from the associated endpoint
+type IncompleteLogStorageResponse struct {
+        PagingInfo
+        Executions []*Execution `json:"executions"`
+}
+
+// ResumedIncompleteLogStorageResponse is the response body from the associated endpoint
+type ResumedIncompleteLogStorageResponse struct {
+        Resumed bool `json:"resumed"`
+}
+
+// System is the information regarding system calls
+type System struct {
+        c *Client
+}
+
+// System interacts with the system api
+func (c *Client) System() *System <span class="cov0" title="0">{
+        return &amp;System{c: c}
+}</span>
+
+// Info retrieves Rundeck server information and stats.
+func (s *System) Info() (*SystemInfoResponse, error) <span class="cov0" title="0">{
+        url := s.c.RundeckAddr + "/system/info"
+
+        res, err := s.c.checkResponseOK(s.c.get(url))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        var systemInfo SystemInfoResponse
+        return &amp;systemInfo, json.NewDecoder(res.Body).Decode(&amp;systemInfo)</span>
+}
+
+// SetExecutionMode sets the execution mode
+func (s *System) SetExecutionMode(mode ExecutionMode) (*ExecutionModeResponse, error) <span class="cov0" title="0">{
+        if mode != ExecutionModeActive &amp;&amp; mode != ExecutionModePassive </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("received invalid execution mode %s - must be either \"%s\" or \"%s\"", mode, ExecutionModeActive, ExecutionModePassive)
+        }</span>
+
+        <span class="cov0" title="0">url := s.c.RundeckAddr + "/system/executions"
+
+        enabledDisabled := "enable"
+        if mode == ExecutionModePassive </span><span class="cov0" title="0">{
+                enabledDisabled = "disable"
+        }</span>
+
+        <span class="cov0" title="0">url += "/" + enabledDisabled
+
+        res, err := s.c.checkResponseOK(s.c.post(url, nil))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        var executionMode ExecutionModeResponse
+        err = json.NewDecoder(res.Body).Decode(&amp;executionMode)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">executionMode.Active = true
+        if executionMode.ExecutionMode == ExecutionModePassive </span><span class="cov0" title="0">{
+                executionMode.Active = false
+        }</span>
+
+        <span class="cov0" title="0">return &amp;executionMode, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file12" style="display: none">package rundeck
+
+import (
+        "bytes"
+        "encoding/json"
+        "time"
+)
+
+// Token is the information regarding a user token
+type Token struct {
+        User       string    `json:"user"`
+        ID         string    `json:"id"`
+        Creator    string    `json:"creator"`
+        Expiration time.Time `json:"expiration"`
+        Roles      []string  `json:"roles"`
+        Expired    bool      `json:"expired"`
+}
+
+// Tokens is used to perform token specific API operations
+type Tokens struct {
+        c *Client
+}
+
+// Tokens is used to return the client for token specific API operations
+func (c *Client) Tokens() *Tokens <span class="cov0" title="0">{
+        return &amp;Tokens{c: c}
+}</span>
+
+// List returns all tokens
+func (t *Tokens) List() ([]*Token, error) <span class="cov0" title="0">{
+        url := t.c.RundeckAddr + "/tokens"
+
+        res, err := t.c.checkResponseOK(t.c.get(url))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        var tokenList []*Token
+        return tokenList, json.NewDecoder(res.Body).Decode(&amp;tokenList)</span>
+}
+
+// User returns the tokens associated with the supplied user
+func (t *Tokens) User(user string) ([]*Token, error) <span class="cov0" title="0">{
+        url := t.c.RundeckAddr + "/tokens/" + user
+
+        res, err := t.c.checkResponseOK(t.c.get(url))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        var tokenList []*Token
+        return tokenList, json.NewDecoder(res.Body).Decode(&amp;tokenList)</span>
+}
+
+// Get returns the token by the supplied id
+func (t *Tokens) Get(id string) (*Token, error) <span class="cov0" title="0">{
+        url := t.c.RundeckAddr + "/token/" + id
+
+        res, err := t.c.checkResponseOK(t.c.get(url))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        var token Token
+        return &amp;token, json.NewDecoder(res.Body).Decode(&amp;token)</span>
+}
+
+// Create creates a token based on the supplied config.
+//
+// If duration is nil, Rundeck will use the configured default.
+// NOTE: the duration needs to be something that rundeck can understand.
+// Unfortunately, this isn't a go parseable duration.  "120d" is understood by Rundeck
+// while "2880h0m0s" is not (what time.Duration.String() returns for the equivalence).
+func (t *Tokens) Create(user string, roles []string, duration *string) (*Token, error) <span class="cov0" title="0">{
+        url := t.c.RundeckAddr + "/tokens"
+
+        payload := map[string]interface{}{
+                "user":  user,
+                "roles": roles,
+        }
+
+        if duration != nil </span><span class="cov0" title="0">{
+                payload["duration"] = stringValue(duration)
+        }</span>
+
+        <span class="cov0" title="0">bs, err := json.Marshal(payload)
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+
+        <span class="cov0" title="0">res, err := t.c.checkResponseCreated(t.c.post(url, bytes.NewReader(bs)))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        var token Token
+        return &amp;token, json.NewDecoder(res.Body).Decode(&amp;token)</span>
+}
+
+// Delete deletes a token
+func (t *Tokens) Delete(id string) error <span class="cov0" title="0">{
+        url := t.c.RundeckAddr + "/token/" + id
+
+        res, err := t.c.checkResponseNoContent(t.c.delete(url, nil))
+        if err != nil </span><span class="cov0" title="0">{
+                return err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        return nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file13" style="display: none">package rundeck
+
+import "net/http"
+
+type rundeckTransport struct {
+        apiToken            string
+        underlyingTransport http.RoundTripper
+}
+
+func (t *rundeckTransport) RoundTrip(req *http.Request) (*http.Response, error) <span class="cov8" title="1">{
+        if req.Header.Get("Accept") == "" </span><span class="cov8" title="1">{
+                req.Header.Add("Accept", "application/json")
+        }</span>
+        <span class="cov8" title="1">if req.Header.Get("Content-Type") == "" </span><span class="cov8" title="1">{
+                req.Header.Add("Content-Type", "application/json")
+        }</span>
+        <span class="cov8" title="1">req.Header.Add("X-Rundeck-Auth-Token", t.apiToken)
+        return t.underlyingTransport.RoundTrip(req)</span>
+}
+</pre>
+		
+		<pre class="file" id="file14" style="display: none">package rundeck
+
+import (
+        "bytes"
+        "encoding/json"
+        "fmt"
+        "io"
+)
+
+// UserProfile is the information relating to a user on Rundeck
+type UserProfile struct {
+        Login     string `json:"login"`
+        FirstName string `json:"firstName"`
+        LastName  string `json:"lastName"`
+        Email     string `json:"email"`
+}
+
+// ModifyUserInput are the fields necessary to modify a user
+type ModifyUserInput struct {
+        FirstName string `json:"firstName"`
+        LastName  string `json:"lastName"`
+        Email     string `json:"email"`
+}
+
+// Users the is information regarding user profiles
+type Users struct {
+        c *Client
+}
+
+// Users interacts with the User profile API
+func (c *Client) Users() *Users <span class="cov0" title="0">{
+        return &amp;Users{c: c}
+}</span>
+
+// List returns a list of all the users
+func (u *Users) List() ([]*UserProfile, error) <span class="cov0" title="0">{
+        url := u.c.RundeckAddr + "/user/list"
+
+        res, err := u.c.checkResponseOK(u.c.get(url))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        var users []*UserProfile
+        return users, json.NewDecoder(res.Body).Decode(&amp;users)</span>
+}
+
+// Get fetches a user profile.
+//
+// If the login parameter is nil, the profile associated with
+// the supplied auth token will be returned.
+func (u *Users) Get(login *string) (*UserProfile, error) <span class="cov0" title="0">{
+        url := u.c.RundeckAddr + "/user/info"
+
+        if login != nil </span><span class="cov0" title="0">{
+                url += "/" + stringValue(login)
+        }</span>
+
+        <span class="cov0" title="0">res, err := u.c.checkResponseOK(u.c.get(url))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        var user UserProfile
+        return &amp;user, json.NewDecoder(res.Body).Decode(&amp;user)</span>
+}
+
+// Modify will modify the user.
+//
+// If the user parameter is nil, then the user associated with
+// the auth token will be modified.
+func (u *Users) Modify(login *string, input *ModifyUserInput) (*UserProfile, error) <span class="cov0" title="0">{
+        if input == nil </span><span class="cov0" title="0">{
+                return nil, fmt.Errorf("the parameter ModifyUserInput cannot be nil")
+        }</span>
+
+        <span class="cov0" title="0">url := u.c.RundeckAddr + "/user/info"
+
+        if login != nil </span><span class="cov0" title="0">{
+                url += "/" + stringValue(login)
+        }</span>
+
+        <span class="cov0" title="0">var body io.Reader
+        if input != nil </span><span class="cov0" title="0">{
+                bs, err := json.Marshal(input)
+                if err != nil </span><span class="cov0" title="0">{
+                        return nil, err
+                }</span>
+                <span class="cov0" title="0">body = bytes.NewReader(bs)</span>
+        }
+
+        <span class="cov0" title="0">res, err := u.c.checkResponseOK(u.c.post(url, body))
+        if err != nil </span><span class="cov0" title="0">{
+                return nil, err
+        }</span>
+        <span class="cov0" title="0">defer res.Body.Close()
+
+        var userProfile UserProfile
+        return &amp;userProfile, json.NewDecoder(res.Body).Decode(&amp;userProfile)</span>
+}
+</pre>
+		
+		<pre class="file" id="file15" style="display: none">package rundeck
+
+import (
+        "strconv"
+)
+
+func stringValue(v *string) string <span class="cov0" title="0">{
+        if v != nil </span><span class="cov0" title="0">{
+                return *v
+        }</span>
+        <span class="cov0" title="0">return ""</span>
+}
+
+func stringReference(v string) *string <span class="cov0" title="0">{
+        return &amp;v
+}</span>
+
+func intSliceToStringSlice(si []int) []string <span class="cov8" title="1">{
+        var ss []string
+        for _, i := range si </span><span class="cov8" title="1">{
+                ss = append(ss, strconv.Itoa(i))
+        }</span>
+        <span class="cov8" title="1">return ss</span>
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>
