@@ -308,7 +308,7 @@ func (e *Executions) DeleteExecutions(id int) (*DeleteExecutionsResponse, error)
 	return &response, json.NewDecoder(res.Body).Decode(&response)
 }
 
-// ListRunningExecutions returns running exeuctions for the specified project ("*" for all projects)
+// ListRunningExecutions returns running executions for the specified project ("*" for all projects)
 func (e *Executions) ListRunningExecutions(project string) (*ExecutionsResponse, error) {
 	rawURL := e.c.RundeckAddr + "/project/" + project + "/executions/running"
 
@@ -324,7 +324,7 @@ func (e *Executions) ListRunningExecutions(project string) (*ExecutionsResponse,
 
 // Info returns information about the specific execution
 func (e *Executions) Info(id int) (*Execution, error) {
-	rawURL := e.c.RundeckAddr + "/exeuction/" + strconv.FormatInt(int64(id), 10)
+	rawURL := e.c.RundeckAddr + "/execution/" + strconv.FormatInt(int64(id), 10)
 
 	res, err := e.c.checkResponseOK(e.c.get(rawURL))
 	if err != nil {
