@@ -104,7 +104,7 @@ type RunJobInput struct {
 	LogLevel  LogLevel
 	AsUser    string
 	Filters   map[string]string
-	RunAtTime time.Time
+	RunAtTime *time.Time
 	Options   map[string]string
 }
 
@@ -112,7 +112,7 @@ type runJobInputSerializeable struct {
 	LogLevel  LogLevel          `json:"loglevel,omitempty"`
 	AsUser    string            `json:"asUser,omitempty"`
 	Filter    string            `json:"filter,omitempty"`
-	RunAtTime time.Time         `json:"runAtTime,omitempty"`
+	RunAtTime *time.Time        `json:"runAtTime,omitempty"`
 	Options   map[string]string `json:"options,omitempty"`
 }
 
@@ -614,7 +614,9 @@ func (j *Jobs) convertToSerializeable(input *RunJobInput) *runJobInputSerializea
 	if input.Options != nil {
 		serializeable.Options = input.Options
 	}
-	serializeable.RunAtTime = input.RunAtTime
+	if input.RunAtTime != nil {
+		serializeable.RunAtTime = input.RunAtTime
+	}
 
 	if input.Filters != nil {
 		serializeable.Filter = j.c.convertFiltersToSerializeableFormat(input.Filters)
