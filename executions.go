@@ -85,7 +85,7 @@ type ExecutionTimestamp struct {
 
 // ExecutionsResponse contains paging information as well as executions
 type ExecutionsResponse struct {
-	PagingInfo
+	PagingInfo `json:"paging"`
 	Executions []*Execution `json:"executions"`
 }
 
