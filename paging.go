@@ -7,3 +7,10 @@ type PagingInfo struct {
 	Max    int `json:"max"`
 	Offset int `json:"offset"`
 }
+
+type pagingInfo struct {
+	Count  int `json:"count"`
+	Total  int `json:"total"`
+	Max    int `json:"max"`
+	Offset int `json:"offset"`
+}
