@@ -61,7 +61,7 @@ type Execution struct {
 	ID              int                `json:"id"`
 	HREF            string             `json:"href"`
 	Permalink       string             `json:"permalink"`
-	Status          string             `json:"status"`
+	Status          ExecutionStatus    `json:"status"`
 	CustomStatus    string             `json:"customStatus"`
 	Project         string             `json:"project"`
 	User            string             `json:"user"`
