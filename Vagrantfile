@@ -23,7 +23,7 @@ Vagrant.configure("2") do |config|
     (1..numRundecks).each do |i|
         config.vm.define "rundeck-#{i}" do |rundeck|
             rundeck.vm.provider "docker" do |d|
-                d.image = "rundeck/rundeck:3.0.5"
+                d.image = "rundeck/rundeck:3.0.6"
                 d.name = "rundeck-#{i}"
                 d.ports = ["444#{i-1}:444#{i-1}"]
                 d.cmd = ["-Dserver.http.port=444#{i-1}"]

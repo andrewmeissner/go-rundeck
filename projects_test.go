@@ -40,6 +40,7 @@ func TestListProjects(t *testing.T) {
 		}
 		if err := cli.Projects().Delete(project.Name); err != nil {
 			t.Errorf("failed to delete project %s\t%v\n", project.Name, err)
+			t.FailNow()
 		}
 	}
 }
@@ -59,6 +60,7 @@ func TestCreateProject(t *testing.T) {
 
 	if err := cli.Projects().Delete(info.Name); err != nil {
 		t.Errorf("failed to delete project %s\t%v\n", info.Name, err)
+		t.FailNow()
 	}
 }
 
@@ -82,6 +84,7 @@ func TestCreateWithDescription(t *testing.T) {
 
 	if err := cli.Projects().Delete(name); err != nil {
 		t.Errorf("project deletion failed: %v\n", err)
+		t.FailNow()
 	}
 
 	info2, err := cli.Projects().Create(&rundeck.CreateProjectInput{
@@ -98,7 +101,10 @@ func TestCreateWithDescription(t *testing.T) {
 		t.Error("failed on secondary desc compromise")
 	}
 
-	cli.Projects().Delete(name)
+	if err := cli.Projects().Delete(name); err != nil {
+		t.Error("project deletion failed", err)
+		t.FailNow()
+	}
 }
 
 func TestCreateProjectWithNilData(t *testing.T) {
@@ -138,6 +144,7 @@ func TestGetProjectInfo(t *testing.T) {
 
 	if err := cli.Projects().Delete(name); err != nil {
 		t.Error("project failed to delete", err)
+		t.FailNow()
 	}
 }
 
@@ -153,6 +160,7 @@ func TestProjectDeletion(t *testing.T) {
 
 	if err := cli.Projects().Delete(project.Name); err != nil {
 		t.Error("failed to delete project", project.Name, err)
+		t.FailNow()
 	}
 }
 
@@ -179,6 +187,7 @@ func TestGetConfiguration(t *testing.T) {
 
 	if err := cli.Projects().Delete(project.Name); err != nil {
 		t.Error("project failed to delete", err)
+		t.FailNow()
 	}
 }
 
@@ -216,6 +225,7 @@ func TestConfigureExistingProject(t *testing.T) {
 
 	if err := cli.Projects().Delete(project.Name); err != nil {
 		t.Error("failed to delete project", err)
+		t.FailNow()
 	}
 }
 
@@ -254,6 +264,7 @@ func TestGetConfigurationKey(t *testing.T) {
 
 	if err := cli.Projects().Delete(project.Name); err != nil {
 		t.Error("failed to delete project", err)
+		t.FailNow()
 	}
 }
 
@@ -288,6 +299,7 @@ func TestSetConfigurationKey(t *testing.T) {
 
 	if err := cli.Projects().Delete(project.Name); err != nil {
 		t.Error("project failed to delete", err)
+		t.FailNow()
 	}
 }
 
@@ -309,6 +321,7 @@ func TestDeleteConfigKeyPair(t *testing.T) {
 
 	if err := cli.Projects().DeleteConfigKey(project.Name, configKey); err != nil {
 		t.Error("failed to delete config key", configKey, err)
+		t.FailNow()
 	}
 
 	configuration, err := cli.Projects().Configuration(project.Name)
@@ -322,6 +335,7 @@ func TestDeleteConfigKeyPair(t *testing.T) {
 
 	if err := cli.Projects().Delete(project.Name); err != nil {
 		t.Error("failed to delete project", err)
+		t.FailNow()
 	}
 }
 
@@ -346,6 +360,7 @@ func TestListProjectResources(t *testing.T) {
 
 	if err := cli.Projects().Delete(projectInfo.Name); err != nil {
 		t.Error("failed to delete project", err)
+		t.FailNow()
 	}
 }
 
@@ -390,6 +405,7 @@ func TestSynchronousArchiveExport(t *testing.T) {
 
 	if err := cli.Projects().Delete(project.Name); err != nil {
 		t.Error("project failed to delete", err)
+		t.FailNow()
 	}
 }
 
@@ -437,6 +453,7 @@ func TestProjectArchiveImport(t *testing.T) {
 	for _, projectName := range []string{project.Name, newProject.Name} {
 		if err := cli.Projects().Delete(projectName); err != nil {
 			t.Error("failed to delete project", projectName, err)
+			t.FailNow()
 		}
 	}
 }
@@ -482,5 +499,6 @@ func TestAsyncArchiveExport(t *testing.T) {
 
 	if err := cli.Projects().Delete(project.Name); err != nil {
 		t.Error("failed to delete project", err)
+		t.FailNow()
 	}
 }
