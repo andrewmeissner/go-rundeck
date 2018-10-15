@@ -192,7 +192,7 @@ type ExecutionsOutputResponse struct {
 	ExecCompleted  bool           `json:"execCompleted"`
 	HasFailedNodes bool           `json:"hasFailedNodes"`
 	ExecutionState ExecutionState `json:"execState"`
-	LastModified   int64          `json:"lastModified"`
+	LastModified   string         `json:"lastModified"`
 	ExecDuration   int64          `json:"execDuration"`
 	PercentLoaded  float32        `json:"percentLoaded"`
 	TotalSize      int            `json:"totalSize"`
