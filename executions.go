@@ -182,12 +182,12 @@ type ExecutionsOutputInput struct {
 
 // ExecutionsOutputResponse ...
 type ExecutionsOutputResponse struct {
-	ID             int            `json:"id"`
+	ID             string         `json:"id"`
 	Message        string         `json:"message"`
 	Error          string         `json:"error"`
 	Unmodified     bool           `json:"unmodified"`
 	Empty          bool           `json:"empty"`
-	Offset         int            `json:"offset"`
+	Offset         string         `json:"offset"`
 	Completed      bool           `json:"completed"`
 	ExecCompleted  bool           `json:"execCompleted"`
 	HasFailedNodes bool           `json:"hasFailedNodes"`
